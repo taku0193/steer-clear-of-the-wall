@@ -18,7 +18,7 @@
   - _Requirements: 1.1, 9.4, 9.5_
   - _Boundary: Frontend Foundation_
 
-- [ ] 2. 画面状態の型と初期状態を定義する
+- [x] 2. 画面状態の型と初期状態を定義する
   - 作業内容: `title`, `preparing`, `countdown`, `playing`, `result`, `error` の状態を扱う土台を作る。
   - 変更するファイル: `src/game/types.ts`, `src/game/state.ts`, `src/App.tsx`
   - 依存関係: 1
