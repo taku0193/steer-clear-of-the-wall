@@ -9,7 +9,7 @@
 
 ## Tasks
 
-- [ ] 1. 開発基盤を最小構成で作成する
+- [x] 1. 開発基盤を最小構成で作成する
   - 作業内容: Vite + React + TypeScriptの最小アプリとして起動できる基盤を作る。
   - 変更するファイル: `package.json`, `index.html`, `tsconfig.json`, `vite.config.ts`, `src/main.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: なし
