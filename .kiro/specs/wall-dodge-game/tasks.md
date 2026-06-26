@@ -36,7 +36,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
   - _Boundary: Screen Components, App_
 
-- [ ] 4. 結果画面とエラー画面の最小UIを作成する
+- [x] 4. 結果画面とエラー画面の最小UIを作成する
   - 作業内容: ゲーム終了時とエラー時に、次に取る行動が分かる画面を作る。
   - 変更するファイル: `src/components/ResultScreen.tsx`, `src/components/ErrorScreen.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: 2
