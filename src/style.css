@@ -47,7 +47,9 @@ select {
 }
 
 .title-screen,
-.preparing-screen {
+.preparing-screen,
+.result-screen,
+.error-screen {
   display: grid;
   gap: 20px;
 }
@@ -103,4 +105,17 @@ h1 {
 .primary-action:focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 3px;
+}
+
+.score-readout {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: rgba(247, 247, 242, 0.72);
+}
+
+.score-readout strong {
+  color: #ffffff;
+  font-size: 3rem;
+  line-height: 1;
 }
