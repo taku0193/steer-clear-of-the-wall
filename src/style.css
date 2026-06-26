@@ -38,12 +38,18 @@ select {
     #101315;
 }
 
-.foundation-panel {
+.screen-panel {
   width: min(680px, 100%);
   border: 1px solid rgba(247, 247, 242, 0.16);
   border-radius: 8px;
   padding: 32px;
   background: rgba(16, 19, 21, 0.76);
+}
+
+.title-screen,
+.preparing-screen {
+  display: grid;
+  gap: 20px;
 }
 
 .eyebrow {
@@ -65,8 +71,36 @@ h1 {
 
 .summary {
   max-width: 48rem;
-  margin: 20px 0 0;
+  margin: 0;
   color: rgba(247, 247, 242, 0.76);
   font-size: 1rem;
   line-height: 1.65;
+}
+
+.state-readout {
+  margin: 0;
+  color: #a7f3d0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.primary-action {
+  justify-self: start;
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 22px;
+  color: #0f1720;
+  background: #34d399;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-action:hover {
+  background: #6ee7b7;
+}
+
+.primary-action:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
 }
