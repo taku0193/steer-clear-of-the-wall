@@ -3,7 +3,9 @@ import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
+import { advanceWallProgress } from "./game/gameLoop";
 import { createGameState, createInitialGameState } from "./game/state";
+import { getWallPatternById, WALL_PATTERNS } from "./game/wallPatterns";
 
 const COUNTDOWN_START = 3;
 
@@ -49,10 +51,10 @@ export function App() {
           };
         }
 
-        return {
+        return advanceWallProgress({
           ...currentState,
           remainingSeconds: nextRemainingSeconds,
-        };
+        }, WALL_PATTERNS);
       });
     }, 1000);
 
@@ -122,12 +124,18 @@ export function App() {
   }
 
   if (gameState.phase === "playing") {
+    const activeWallPattern = getWallPatternById(gameState.activeWallPatternId);
+
     return (
       <main className="app-shell app-shell-game">
         <GameScreen
           remainingSeconds={gameState.remainingSeconds}
           score={gameState.score}
           misses={gameState.misses}
+          mockPoseName={gameState.mockPose.name}
+          mockPoseBodyArea={gameState.mockPose.bodyArea}
+          activeWallPatternName={activeWallPattern.name}
+          wallProgress={gameState.wallProgress}
         />
       </main>
     );

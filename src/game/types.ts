@@ -6,13 +6,6 @@ export type GamePhase =
   | "result"
   | "error";
 
-export type GameState = {
-  phase: GamePhase;
-  remainingSeconds: number;
-  score: number;
-  misses: number;
-};
-
 export type SafeArea = {
   x: number;
   y: number;
@@ -25,4 +18,21 @@ export type WallPattern = {
   name: string;
   safeArea: SafeArea;
   scoreValue: number;
+};
+
+export type MockPose = {
+  id: string;
+  name: string;
+  bodyArea: SafeArea;
+};
+
+export type GameState = {
+  phase: GamePhase;
+  remainingSeconds: number;
+  score: number;
+  misses: number;
+  mockPose: MockPose;
+  activeWallPatternId: string;
+  wallProgress: number;
+  wallSequenceIndex: number;
 };

@@ -72,7 +72,7 @@
   - _Requirements: 5.3, 5.4, 5.5_
   - _Boundary: Wall Pattern Data_
 
-- [ ] 8. モック姿勢と壁進行でゲームループの土台を作成する
+- [x] 8. モック姿勢と壁進行でゲームループの土台を作成する
   - 作業内容: カメラなしで固定または簡易操作の姿勢データを使い、壁が迫る進行を表現する。
   - 変更するファイル: `src/game/types.ts`, `src/game/state.ts`, `src/App.tsx`, `src/components/GameScreen.tsx`
   - 依存関係: 6, 7
