@@ -49,11 +49,61 @@ select {
 .title-screen,
 .preparing-screen,
 .countdown-screen,
-.playing-screen,
 .result-screen,
 .error-screen {
   display: grid;
   gap: 20px;
+}
+
+.app-shell-game {
+  align-items: stretch;
+}
+
+.game-screen {
+  display: grid;
+  width: min(960px, 100%);
+  gap: 20px;
+}
+
+.game-hud {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hud-item {
+  display: grid;
+  min-height: 96px;
+  align-content: center;
+  gap: 6px;
+  border: 1px solid rgba(247, 247, 242, 0.16);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(16, 19, 21, 0.76);
+}
+
+.hud-item span,
+.hud-item small {
+  color: rgba(247, 247, 242, 0.72);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.hud-item strong {
+  color: #ffffff;
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  line-height: 1;
+}
+
+.playfield-placeholder {
+  display: grid;
+  min-height: 360px;
+  align-content: center;
+  gap: 20px;
+  border: 1px solid rgba(247, 247, 242, 0.16);
+  border-radius: 8px;
+  padding: 32px;
+  background: rgba(16, 19, 21, 0.76);
 }
 
 .eyebrow {
@@ -128,4 +178,17 @@ h1 {
   color: #ffffff;
   font-size: 3rem;
   line-height: 1;
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .game-hud,
+  .result-stats {
+    grid-template-columns: 1fr;
+  }
 }

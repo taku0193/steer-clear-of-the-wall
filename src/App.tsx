@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { ErrorScreen } from "./components/ErrorScreen";
+import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
-import { createInitialGameState } from "./game/state";
+import { createGameState, createInitialGameState } from "./game/state";
 
 const COUNTDOWN_START = 3;
 
@@ -17,7 +18,7 @@ export function App() {
 
     const timerId = window.setTimeout(() => {
       if (countdownValue <= 1) {
-        setGameState({ phase: "playing" });
+        setGameState(createGameState("playing"));
         return;
       }
 
@@ -27,13 +28,44 @@ export function App() {
     return () => window.clearTimeout(timerId);
   }, [countdownValue, gameState.phase]);
 
+  useEffect(() => {
+    if (gameState.phase !== "playing") {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setGameState((currentState) => {
+        if (currentState.phase !== "playing") {
+          return currentState;
+        }
+
+        const nextRemainingSeconds = Math.max(currentState.remainingSeconds - 1, 0);
+
+        if (nextRemainingSeconds === 0) {
+          return {
+            ...currentState,
+            phase: "result",
+            remainingSeconds: 0,
+          };
+        }
+
+        return {
+          ...currentState,
+          remainingSeconds: nextRemainingSeconds,
+        };
+      });
+    }, 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [gameState.phase, gameState.remainingSeconds]);
+
   function handleStartGame() {
-    setGameState({ phase: "preparing" });
+    setGameState(createGameState("preparing"));
   }
 
   function handlePreparationComplete() {
     setCountdownValue(COUNTDOWN_START);
-    setGameState({ phase: "countdown" });
+    setGameState(createGameState("countdown"));
   }
 
   function handleResetGame() {
@@ -52,7 +84,11 @@ export function App() {
   if (gameState.phase === "result") {
     return (
       <main className="app-shell">
-        <ResultScreen finalScore={0} onRestart={handleResetGame} />
+        <ResultScreen
+          finalScore={gameState.score}
+          misses={gameState.misses}
+          onRestart={handleResetGame}
+        />
       </main>
     );
   }
@@ -87,15 +123,12 @@ export function App() {
 
   if (gameState.phase === "playing") {
     return (
-      <main className="app-shell" aria-labelledby="playing-title">
-        <section className="screen-panel playing-screen" aria-live="polite">
-          <p className="eyebrow">Playing</p>
-          <h1 id="playing-title">プレイ中</h1>
-          <p className="state-readout">仮のプレイ中表示</p>
-          <p className="summary">
-            ゲーム本体の表示、制限時間、スコア、壁の描画は後続タスクで接続します。
-          </p>
-        </section>
+      <main className="app-shell app-shell-game">
+        <GameScreen
+          remainingSeconds={gameState.remainingSeconds}
+          score={gameState.score}
+          misses={gameState.misses}
+        />
       </main>
     );
   }

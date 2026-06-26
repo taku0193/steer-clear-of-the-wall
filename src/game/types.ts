@@ -8,4 +8,7 @@ export type GamePhase =
 
 export type GameState = {
   phase: GamePhase;
+  remainingSeconds: number;
+  score: number;
+  misses: number;
 };

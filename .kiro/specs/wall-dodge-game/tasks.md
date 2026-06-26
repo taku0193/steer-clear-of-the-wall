@@ -54,7 +54,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
   - _Boundary: Game State, GameScreen_
 
-- [ ] 6. プレイ画面のHUDと制限時間表示を作成する
+- [x] 6. プレイ画面のHUDと制限時間表示を作成する
   - 作業内容: プレイ中にスコア、残り時間、検出状態、フィードバックを表示できるHUDを作る。
   - 変更するファイル: `src/components/GameScreen.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: 5
