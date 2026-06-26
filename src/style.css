@@ -48,6 +48,8 @@ select {
 
 .title-screen,
 .preparing-screen,
+.countdown-screen,
+.playing-screen,
 .result-screen,
 .error-screen {
   display: grid;
@@ -84,6 +86,14 @@ h1 {
   color: #a7f3d0;
   font-size: 0.95rem;
   font-weight: 700;
+}
+
+.countdown-number {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(5rem, 22vw, 10rem);
+  font-weight: 900;
+  line-height: 0.9;
 }
 
 .primary-action {

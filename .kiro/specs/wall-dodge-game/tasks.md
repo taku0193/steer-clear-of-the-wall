@@ -45,7 +45,7 @@
   - _Requirements: 8.3, 8.4, 8.5, 9.1, 9.2, 9.3_
   - _Boundary: Screen Components, App_
 
-- [ ] 5. カウントダウンからプレイ開始までの状態遷移を作成する
+- [x] 5. カウントダウンからプレイ開始までの状態遷移を作成する
   - 作業内容: 準備完了後にカウントダウンを表示し、終了後にプレイ状態へ進める。
   - 変更するファイル: `src/game/state.ts`, `src/App.tsx`, `src/components/GameScreen.tsx`, `src/style.css`
   - 依存関係: 3
