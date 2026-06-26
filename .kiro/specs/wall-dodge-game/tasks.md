@@ -63,7 +63,7 @@
   - _Requirements: 7.1, 7.4, 8.1, 8.2, 8.3_
   - _Boundary: GameScreen, Game State_
 
-- [ ] 7. 壁パターンの最小データを作成する
+- [x] 7. 壁パターンの最小データを作成する
   - 作業内容: 中央、左、右など少数の壁パターンを、表示用と判定用の安全領域として定義する。
   - 変更するファイル: `src/game/types.ts`, `src/game/wallPatterns.ts`
   - 依存関係: 2
