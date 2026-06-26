@@ -27,7 +27,7 @@
   - _Requirements: 1.1, 1.4, 4.4_
   - _Boundary: Game State_
 
-- [ ] 3. タイトル画面と開始導線を作成する
+- [x] 3. タイトル画面と開始導線を作成する
   - 作業内容: 初回ユーザーがゲーム内容を短く理解し、開始操作できる画面を作る。
   - 変更するファイル: `src/components/TitleScreen.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: 2
