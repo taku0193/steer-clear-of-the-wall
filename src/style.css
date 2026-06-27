@@ -167,7 +167,8 @@ h1 {
   pointer-events: none;
 }
 
-.preparation-actions {
+.preparation-actions,
+.screen-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;

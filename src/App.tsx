@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { startCamera, stopCamera } from "./camera/camera";
 import { CameraPreview } from "./components/CameraPreview";
 import { ErrorScreen } from "./components/ErrorScreen";
@@ -35,35 +35,43 @@ export function App() {
   const [poseFrame, setPoseFrame] = useState<PoseFrame | null>(null);
   const [poseVideoElement, setPoseVideoElement] =
     useState<HTMLVideoElement | null>(null);
+  const resourceSessionRef = useRef(0);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const poseDetectorRef = useRef<PoseDetectorAdapter | null>(null);
 
-  useEffect(() => {
-    if (!cameraStream) {
-      return;
+  const releaseMediaResources = useCallback((updateState = true) => {
+    resourceSessionRef.current += 1;
+
+    const currentDetector = poseDetectorRef.current;
+    poseDetectorRef.current = null;
+    if (currentDetector) {
+      disposePoseDetector(currentDetector);
     }
 
-    return () => stopCamera(cameraStream);
-  }, [cameraStream]);
-
-  useEffect(() => {
-    if (!poseDetector) {
-      return;
+    const currentStream = cameraStreamRef.current;
+    cameraStreamRef.current = null;
+    if (currentStream) {
+      stopCamera(currentStream);
     }
 
-    return () => disposePoseDetector(poseDetector);
-  }, [poseDetector]);
-
-  useEffect(() => {
-    if (
-      gameState.phase === "title" ||
-      gameState.phase === "result" ||
-      gameState.phase === "error"
-    ) {
+    if (updateState) {
       setCameraStream(null);
       setPoseDetector(null);
       setPoseFrame(null);
       setPoseVideoElement(null);
+      setIsCameraStarting(false);
     }
-  }, [gameState.phase]);
+  }, []);
+
+  useEffect(() => {
+    return () => releaseMediaResources(false);
+  }, [releaseMediaResources]);
+
+  useEffect(() => {
+    if (gameState.phase === "result" || gameState.phase === "error") {
+      releaseMediaResources();
+    }
+  }, [gameState.phase, releaseMediaResources]);
 
   useEffect(() => {
     if (
@@ -189,10 +197,12 @@ export function App() {
   }, [gameState.phase, gameState.remainingSeconds]);
 
   function handleStartGame() {
-    setGameState(createGameState("preparing"));
+    resetGameSession("preparing");
   }
 
   async function handleStartCamera() {
+    releaseMediaResources();
+    const resourceSession = resourceSessionRef.current;
     setIsCameraStarting(true);
     setGameState((currentState) => ({
       ...currentState,
@@ -201,6 +211,14 @@ export function App() {
       playerArea: null,
     }));
     const cameraResult = await startCamera();
+
+    if (resourceSession !== resourceSessionRef.current) {
+      if (cameraResult.ok) {
+        stopCamera(cameraResult.stream);
+      }
+      return;
+    }
+
     setIsCameraStarting(false);
 
     if (!cameraResult.ok) {
@@ -212,8 +230,17 @@ export function App() {
       return;
     }
 
+    cameraStreamRef.current = cameraResult.stream;
     setCameraStream(cameraResult.stream);
     const detectorResult = await initializePoseDetector();
+
+    if (resourceSession !== resourceSessionRef.current) {
+      if (detectorResult.ok) {
+        disposePoseDetector(detectorResult.detector);
+      }
+      stopCamera(cameraResult.stream);
+      return;
+    }
 
     if (!detectorResult.ok) {
       setGameState((currentState) => ({
@@ -224,6 +251,7 @@ export function App() {
       return;
     }
 
+    poseDetectorRef.current = detectorResult.detector;
     setPoseDetector(detectorResult.detector);
     setGameState((currentState) => ({
       ...currentState,
@@ -242,19 +270,23 @@ export function App() {
   }
 
   function handleUseMockPose() {
-    setCountdownValue(COUNTDOWN_START);
-    setPoseFrame(null);
-    setGameState(createGameState("countdown"));
+    resetGameSession("countdown");
   }
 
-  function handleResetGame() {
+  function resetGameSession(phase: "title" | "preparing" | "countdown") {
+    releaseMediaResources();
     setCountdownValue(COUNTDOWN_START);
-    setCameraStream(null);
-    setIsCameraStarting(false);
-    setPoseDetector(null);
-    setPoseFrame(null);
-    setPoseVideoElement(null);
-    setGameState(createInitialGameState());
+    setGameState(
+      phase === "title" ? createInitialGameState() : createGameState(phase),
+    );
+  }
+
+  function handleReplayGame() {
+    resetGameSession("preparing");
+  }
+
+  function handleReturnToTitle() {
+    resetGameSession("title");
   }
 
   if (gameState.phase === "title") {
@@ -271,7 +303,7 @@ export function App() {
         <ResultScreen
           finalScore={gameState.score}
           misses={gameState.misses}
-          onRestart={handleResetGame}
+          onRestart={handleReplayGame}
         />
       </main>
     );
@@ -282,7 +314,8 @@ export function App() {
       <main className="app-shell">
         <ErrorScreen
           message={getGameErrorMessage(gameState.error)}
-          onRestart={handleResetGame}
+          onRetry={handleReplayGame}
+          onBackToTitle={handleReturnToTitle}
         />
       </main>
     );

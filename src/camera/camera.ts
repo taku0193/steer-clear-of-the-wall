@@ -51,7 +51,15 @@ export async function startCamera(): Promise<CameraResult> {
 
 export function stopCamera(stream: MediaStream): void {
   for (const track of stream.getTracks()) {
-    track.stop();
+    if (track.readyState === "ended") {
+      continue;
+    }
+
+    try {
+      track.stop();
+    } catch {
+      // 他のtrackを確実に停止するため、個別の停止失敗は継続する。
+    }
   }
 }
 
@@ -64,7 +72,10 @@ export function attachCameraStream(
 
 export function detachCameraStream(videoElement: HTMLVideoElement): void {
   videoElement.pause();
-  videoElement.srcObject = null;
+
+  if (videoElement.srcObject) {
+    videoElement.srcObject = null;
+  }
 }
 
 function classifyCameraError(error: unknown): GameError {

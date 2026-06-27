@@ -119,8 +119,18 @@ class MediaPipePoseDetector implements PoseDetectorAdapter {
   }
 
   dispose(): void {
-    this.landmarker?.close();
+    const landmarker = this.landmarker;
     this.landmarker = null;
+
+    if (!landmarker) {
+      return;
+    }
+
+    try {
+      landmarker.close();
+    } catch {
+      // 解放処理は再実行可能に保ち、画面遷移を妨げない。
+    }
   }
 }
 

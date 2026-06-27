@@ -21,7 +21,7 @@ export function ResultScreen({ finalScore, misses, onRestart }: ResultScreenProp
         </p>
       </div>
       <button className="primary-action" type="button" onClick={onRestart}>
-        もう一度試す
+        もう一度プレイ
       </button>
     </section>
   );

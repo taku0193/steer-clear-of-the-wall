@@ -135,7 +135,7 @@
   - _Requirements: 2.1, 2.2, 3.1, 3.2, 4.1, 4.3, 5.1, 5.2, 6.1, 7.1, 8.1, 8.3_
   - _Boundary: App, Pose Adapter, Game State, Canvas Renderer_
 
-- [ ] 15. 再試行とリソース解放を仕上げる
+- [x] 15. 再試行とリソース解放を仕上げる
   - 作業内容: 結果画面やエラー画面から再試行したときに、状態、カメラ、姿勢検出、描画ループが破綻しないようにする。
   - 変更するファイル: `src/App.tsx`, `src/camera/camera.ts`, `src/pose/poseDetector.ts`, `src/game/state.ts`, `src/components/ResultScreen.tsx`, `src/components/ErrorScreen.tsx`
   - 依存関係: 14
