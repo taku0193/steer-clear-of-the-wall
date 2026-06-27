@@ -21,6 +21,14 @@ export type GameError =
     }
   | {
       type: "insecureContext";
+    }
+  | {
+      type: "poseInitializationFailed";
+      message: string;
+    }
+  | {
+      type: "poseDetectionFailed";
+      message: string;
     };
 
 export type SafeArea = {

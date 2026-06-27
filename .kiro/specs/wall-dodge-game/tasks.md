@@ -117,7 +117,7 @@
   - _Requirements: 2.1, 2.3, 2.4, 9.3_
   - _Boundary: Camera Adapter, ErrorScreen_
 
-- [ ] 13. 姿勢検出アダプターを作成する
+- [x] 13. 姿勢検出アダプターを作成する
   - 作業内容: 姿勢検出ライブラリを初期化し、外部ライブラリの出力をゲーム用の姿勢データに変換する。
   - 変更するファイル: `package.json`, `src/pose/poseTypes.ts`, `src/pose/poseDetector.ts`, `src/game/types.ts`, `src/components/ErrorScreen.tsx`
   - 依存関係: 12
