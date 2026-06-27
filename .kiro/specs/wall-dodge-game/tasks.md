@@ -90,7 +90,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.1, 5.2, 5.4_
   - _Boundary: Canvas Renderer, GameScreen_
 
-- [ ] 10. 簡易当たり判定を作成する
+- [x] 10. 簡易当たり判定を作成する
   - 作業内容: 姿勢データと壁の安全領域を比較し、成功、失敗、検出不能を判定する。
   - 変更するファイル: `src/game/types.ts`, `src/game/collision.ts`, `src/game/state.ts`
   - 依存関係: 7, 8
