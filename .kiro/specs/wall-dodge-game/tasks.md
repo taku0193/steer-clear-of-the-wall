@@ -99,7 +99,7 @@
   - _Requirements: 4.2, 6.1, 6.2, 6.3, 6.4, 6.5_
   - _Boundary: Collision Logic, Game State_
 
-- [ ] 11. スコア計算と判定フィードバックを接続する
+- [x] 11. スコア計算と判定フィードバックを接続する
   - 作業内容: 成功時にスコアを加算し、失敗や検出不能の表示をプレイ画面へ反映する。
   - 変更するファイル: `src/game/types.ts`, `src/game/scoring.ts`, `src/game/state.ts`, `src/components/GameScreen.tsx`, `src/components/ResultScreen.tsx`
   - 依存関係: 10
