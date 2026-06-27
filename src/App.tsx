@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { startCamera, stopCamera } from "./camera/camera";
+import { CameraPreview } from "./components/CameraPreview";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
 import { advanceWallProgress } from "./game/gameLoop";
 import { createGameState, createInitialGameState } from "./game/state";
+import type { GameError } from "./game/types";
 import { getWallPatternById, WALL_PATTERNS } from "./game/wallPatterns";
 
 const COUNTDOWN_START = 3;
@@ -12,6 +15,22 @@ const COUNTDOWN_START = 3;
 export function App() {
   const [gameState, setGameState] = useState(createInitialGameState);
   const [countdownValue, setCountdownValue] = useState(COUNTDOWN_START);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [isCameraStarting, setIsCameraStarting] = useState(false);
+
+  useEffect(() => {
+    if (!cameraStream) {
+      return;
+    }
+
+    return () => stopCamera(cameraStream);
+  }, [cameraStream]);
+
+  useEffect(() => {
+    if (gameState.phase === "result" || gameState.phase === "error") {
+      setCameraStream(null);
+    }
+  }, [gameState.phase]);
 
   useEffect(() => {
     if (gameState.phase !== "countdown") {
@@ -65,6 +84,23 @@ export function App() {
     setGameState(createGameState("preparing"));
   }
 
+  async function handleStartCamera() {
+    setIsCameraStarting(true);
+    const result = await startCamera();
+    setIsCameraStarting(false);
+
+    if (!result.ok) {
+      setGameState((currentState) => ({
+        ...currentState,
+        phase: "error",
+        error: result.error,
+      }));
+      return;
+    }
+
+    setCameraStream(result.stream);
+  }
+
   function handlePreparationComplete() {
     setCountdownValue(COUNTDOWN_START);
     setGameState(createGameState("countdown"));
@@ -72,6 +108,8 @@ export function App() {
 
   function handleResetGame() {
     setCountdownValue(COUNTDOWN_START);
+    setCameraStream(null);
+    setIsCameraStarting(false);
     setGameState(createInitialGameState());
   }
 
@@ -99,7 +137,7 @@ export function App() {
     return (
       <main className="app-shell">
         <ErrorScreen
-          message="準備中に問題が発生しました。タイトルへ戻ってもう一度試してください。"
+          message={getCameraErrorMessage(gameState.error)}
           onRestart={handleResetGame}
         />
       </main>
@@ -145,15 +183,51 @@ export function App() {
     <main className="app-shell" aria-labelledby="preparing-title">
       <section className="screen-panel preparing-screen" aria-live="polite">
         <p className="eyebrow">Wall Dodge Game</p>
-        <h1 id="preparing-title">準備中</h1>
-        <p className="state-readout">ゲーム準備中</p>
+        <h1 id="preparing-title">カメラ準備</h1>
         <p className="summary">
-          ゲームを始める準備をしています。画面が切り替わるまでそのままお待ちください。
+          カメラ映像を確認してからゲームを開始します。音声は取得しません。
         </p>
-        <button className="primary-action" type="button" onClick={handlePreparationComplete}>
-          準備完了
-        </button>
+        {cameraStream ? (
+          <>
+            <CameraPreview stream={cameraStream} />
+            <p className="state-readout">カメラ準備完了</p>
+            <button className="primary-action" type="button" onClick={handlePreparationComplete}>
+              準備完了
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="state-readout">
+              {isCameraStarting ? "カメラの許可を待っています" : "カメラは未接続です"}
+            </p>
+            <button
+              className="primary-action"
+              type="button"
+              onClick={handleStartCamera}
+              disabled={isCameraStarting}
+            >
+              {isCameraStarting ? "カメラを起動中" : "カメラを開始"}
+            </button>
+          </>
+        )}
       </section>
     </main>
   );
+}
+
+function getCameraErrorMessage(error: GameError | null): string {
+  switch (error?.type) {
+    case "cameraPermissionDenied":
+      return "カメラの使用が拒否されました。ブラウザの設定でカメラを許可してから、もう一度試してください。";
+    case "cameraNotFound":
+      return "利用できるカメラが見つかりません。カメラの接続を確認してから、もう一度試してください。";
+    case "cameraNotReadable":
+      return "カメラを読み取れません。他のアプリがカメラを使用していないか確認してください。";
+    case "cameraUnavailable":
+      return "このブラウザではカメラを利用できません。対応ブラウザで開いてください。";
+    case "insecureContext":
+      return "カメラを利用するには、localhostまたはHTTPSでページを開いてください。";
+    default:
+      return "カメラの準備中に問題が発生しました。タイトルへ戻ってもう一度試してください。";
+  }
 }

@@ -27,6 +27,7 @@ export function createGameState(phase: GamePhase): GameState {
 
   return {
     phase,
+    error: null,
     remainingSeconds: GAME_DURATION_SECONDS,
     score: INITIAL_SCORE,
     misses: INITIAL_MISSES,

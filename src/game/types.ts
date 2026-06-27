@@ -6,6 +6,23 @@ export type GamePhase =
   | "result"
   | "error";
 
+export type GameError =
+  | {
+      type: "cameraPermissionDenied";
+    }
+  | {
+      type: "cameraNotFound";
+    }
+  | {
+      type: "cameraNotReadable";
+    }
+  | {
+      type: "cameraUnavailable";
+    }
+  | {
+      type: "insecureContext";
+    };
+
 export type SafeArea = {
   x: number;
   y: number;
@@ -43,6 +60,7 @@ export type JudgmentResult =
 
 export type GameState = {
   phase: GamePhase;
+  error: GameError | null;
   remainingSeconds: number;
   score: number;
   misses: number;

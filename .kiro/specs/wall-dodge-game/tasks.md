@@ -108,7 +108,7 @@
   - _Requirements: 6.2, 6.3, 6.4, 7.1, 7.2, 7.3, 7.4, 7.5, 8.4_
   - _Boundary: Scoring Logic, Game State, Screen Components_
 
-- [ ] 12. カメラ入力アダプターを作成する
+- [x] 12. カメラ入力アダプターを作成する
   - 作業内容: ユーザー操作後に映像のみを要求し、取得、停止、エラー分類を行うカメラ境界を作る。
   - 変更するファイル: `src/camera/camera.ts`, `src/game/types.ts`, `src/App.tsx`, `src/components/ErrorScreen.tsx`
   - 依存関係: 3, 4
