@@ -132,6 +132,7 @@ export function App() {
           remainingSeconds={gameState.remainingSeconds}
           score={gameState.score}
           misses={gameState.misses}
+          lastJudgment={gameState.lastJudgment}
           mockPose={gameState.mockPose}
           activeWallPattern={activeWallPattern}
           wallProgress={gameState.wallProgress}

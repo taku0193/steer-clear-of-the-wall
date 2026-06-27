@@ -16,7 +16,7 @@ export function ResultScreen({ finalScore, misses, onRestart }: ResultScreenProp
           <strong>{finalScore}</strong>
         </p>
         <p className="score-readout">
-          <span>ミス</span>
+          <span>ミス数</span>
           <strong>{misses}</strong>
         </p>
       </div>

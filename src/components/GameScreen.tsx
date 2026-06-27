@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
-import type { MockPose, WallPattern } from "../game/types";
+import type { JudgmentResult, MockPose, WallPattern } from "../game/types";
 import { renderGameCanvas } from "../rendering/canvasRenderer";
 
 type GameScreenProps = {
   remainingSeconds: number;
   score: number;
   misses: number;
+  lastJudgment: JudgmentResult | null;
   mockPose: MockPose;
   activeWallPattern: WallPattern;
   wallProgress: number;
@@ -15,12 +16,14 @@ export function GameScreen({
   remainingSeconds,
   score,
   misses,
+  lastJudgment,
   mockPose,
   activeWallPattern,
   wallProgress,
 }: GameScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wallProgressPercent = Math.round(wallProgress * 100);
+  const judgmentFeedback = getJudgmentFeedback(lastJudgment);
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -63,7 +66,13 @@ export function GameScreen({
         <p className="eyebrow">Playing</p>
         <h1 id="playing-title">プレイ中</h1>
         <p className="summary">
-          壁の描画、当たり判定、スコア加算は後続タスクで接続します。
+          壁が通過したとき、プレイヤー領域が安全領域内に収まっているか判定します。
+        </p>
+        <p
+          className={`judgment-feedback judgment-feedback-${judgmentFeedback.status}`}
+          aria-live="polite"
+        >
+          直前の判定: {judgmentFeedback.label}
         </p>
         <dl className="summary">
           <dt>現在の壁</dt>
@@ -79,4 +88,37 @@ export function GameScreen({
       </div>
     </section>
   );
+}
+
+type JudgmentFeedback = {
+  label: string;
+  status: "pending" | "success" | "miss" | "not-detected";
+};
+
+function getJudgmentFeedback(judgment: JudgmentResult | null): JudgmentFeedback {
+  if (!judgment) {
+    return {
+      label: "判定待ち",
+      status: "pending",
+    };
+  }
+
+  if (judgment.type === "success") {
+    return {
+      label: "成功",
+      status: "success",
+    };
+  }
+
+  if (judgment.type === "miss") {
+    return {
+      label: "失敗（安全領域からはみ出しています）",
+      status: "miss",
+    };
+  }
+
+  return {
+    label: "判定不能（姿勢を検出できません）",
+    status: "not-detected",
+  };
 }

@@ -147,6 +147,25 @@ h1 {
   font-weight: 700;
 }
 
+.judgment-feedback {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.judgment-feedback-pending,
+.judgment-feedback-not-detected {
+  color: rgba(247, 247, 242, 0.72);
+}
+
+.judgment-feedback-success {
+  color: #6ee7b7;
+}
+
+.judgment-feedback-miss {
+  color: #fca5a5;
+}
+
 .countdown-number {
   margin: 0;
   color: #ffffff;

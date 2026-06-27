@@ -30,6 +30,7 @@ export function createGameState(phase: GamePhase): GameState {
     remainingSeconds: GAME_DURATION_SECONDS,
     score: INITIAL_SCORE,
     misses: INITIAL_MISSES,
+    lastJudgment: null,
     mockPose: DEFAULT_MOCK_POSE,
     activeWallPatternId: initialWallPattern.id,
     wallProgress: INITIAL_WALL_PROGRESS,

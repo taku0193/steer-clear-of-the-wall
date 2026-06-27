@@ -26,11 +26,27 @@ export type MockPose = {
   bodyArea: SafeArea;
 };
 
+export type JudgmentResult =
+  | {
+      type: "success";
+      patternId: string;
+    }
+  | {
+      type: "miss";
+      patternId: string;
+      reason: "outsideSafeArea";
+    }
+  | {
+      type: "notDetected";
+      patternId: string;
+    };
+
 export type GameState = {
   phase: GamePhase;
   remainingSeconds: number;
   score: number;
   misses: number;
+  lastJudgment: JudgmentResult | null;
   mockPose: MockPose;
   activeWallPatternId: string;
   wallProgress: number;
