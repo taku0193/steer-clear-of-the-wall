@@ -158,6 +158,48 @@ h1 {
   transform: scaleX(-1);
 }
 
+.camera-video-source {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.preparation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.secondary-action {
+  min-height: 48px;
+  border: 1px solid rgba(247, 247, 242, 0.32);
+  border-radius: 8px;
+  padding: 0 22px;
+  color: #f7f7f2;
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.secondary-action:hover {
+  border-color: #a7f3d0;
+  color: #a7f3d0;
+}
+
+.secondary-action:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.primary-action:disabled,
+.secondary-action:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 .judgment-feedback {
   margin: 0;
   font-size: 1rem;

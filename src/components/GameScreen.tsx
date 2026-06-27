@@ -1,5 +1,13 @@
 import { useEffect, useRef } from "react";
-import type { JudgmentResult, MockPose, WallPattern } from "../game/types";
+import type {
+  JudgmentResult,
+  MockPose,
+  PoseDetectionStatus,
+  PoseInputMode,
+  SafeArea,
+  WallPattern,
+} from "../game/types";
+import type { PoseFrame } from "../pose/poseTypes";
 import { renderGameCanvas } from "../rendering/canvasRenderer";
 
 type GameScreenProps = {
@@ -8,6 +16,10 @@ type GameScreenProps = {
   misses: number;
   lastJudgment: JudgmentResult | null;
   mockPose: MockPose;
+  poseFrame: PoseFrame | null;
+  poseInputMode: PoseInputMode;
+  poseDetectionStatus: PoseDetectionStatus;
+  playerArea: SafeArea | null;
   activeWallPattern: WallPattern;
   wallProgress: number;
 };
@@ -18,6 +30,10 @@ export function GameScreen({
   misses,
   lastJudgment,
   mockPose,
+  poseFrame,
+  poseInputMode,
+  poseDetectionStatus,
+  playerArea,
   activeWallPattern,
   wallProgress,
 }: GameScreenProps) {
@@ -32,10 +48,20 @@ export function GameScreen({
 
     renderGameCanvas(canvasRef.current, {
       mockPose,
+      poseFrame,
+      poseInputMode,
+      playerArea,
       wallPattern: activeWallPattern,
       wallProgress,
     });
-  }, [activeWallPattern, mockPose, wallProgress]);
+  }, [
+    activeWallPattern,
+    mockPose,
+    playerArea,
+    poseFrame,
+    poseInputMode,
+    wallProgress,
+  ]);
 
   return (
     <section className="game-screen" aria-labelledby="playing-title">
@@ -61,7 +87,7 @@ export function GameScreen({
           className="game-canvas"
           width="720"
           height="420"
-          aria-label="モック姿勢と壁パターンの簡易描画"
+          aria-label="プレイヤー姿勢と壁パターンのゲーム描画"
         />
         <p className="eyebrow">Playing</p>
         <h1 id="playing-title">プレイ中</h1>
@@ -79,15 +105,35 @@ export function GameScreen({
           <dd>{activeWallPattern.name}</dd>
           <dt>壁の進行</dt>
           <dd>{wallProgressPercent}%</dd>
-          <dt>モック姿勢</dt>
+          <dt>姿勢入力</dt>
+          <dd>{poseInputMode === "camera" ? "カメラ" : "モック"}</dd>
+          <dt>検出状態</dt>
+          <dd>{getPoseStatusLabel(poseDetectionStatus)}</dd>
+          <dt>判定領域</dt>
           <dd>
-            {mockPose.name} / x: {mockPose.bodyArea.x}, y: {mockPose.bodyArea.y}, w:{" "}
-            {mockPose.bodyArea.width}, h: {mockPose.bodyArea.height}
+            {playerArea
+              ? `x: ${playerArea.x.toFixed(2)}, y: ${playerArea.y.toFixed(2)}, w: ${playerArea.width.toFixed(2)}, h: ${playerArea.height.toFixed(2)}`
+              : "未検出"}
           </dd>
         </dl>
       </div>
     </section>
   );
+}
+
+function getPoseStatusLabel(status: PoseDetectionStatus): string {
+  switch (status) {
+    case "mock":
+      return "モック姿勢を使用中";
+    case "initializing":
+      return "姿勢検出を初期化中";
+    case "detecting":
+      return "姿勢を検出中";
+    case "detected":
+      return "姿勢を検出しました";
+    case "notDetected":
+      return "全身を検出できません";
+  }
 }
 
 type JudgmentFeedback = {

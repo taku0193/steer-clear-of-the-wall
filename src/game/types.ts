@@ -51,6 +51,15 @@ export type MockPose = {
   bodyArea: SafeArea;
 };
 
+export type PoseInputMode = "mock" | "camera";
+
+export type PoseDetectionStatus =
+  | "mock"
+  | "initializing"
+  | "detecting"
+  | "detected"
+  | "notDetected";
+
 export type JudgmentResult =
   | {
       type: "success";
@@ -74,6 +83,9 @@ export type GameState = {
   misses: number;
   lastJudgment: JudgmentResult | null;
   mockPose: MockPose;
+  poseInputMode: PoseInputMode;
+  poseDetectionStatus: PoseDetectionStatus;
+  playerArea: SafeArea | null;
   activeWallPatternId: string;
   wallProgress: number;
   wallSequenceIndex: number;

@@ -126,7 +126,7 @@
   - _Requirements: 2.1, 2.2, 2.5, 3.1, 3.2, 3.3_
   - _Boundary: Pose Adapter, ErrorScreen_
 
-- [ ] 14. 実カメラ姿勢データをゲームループへ統合する
+- [x] 14. 実カメラ姿勢データをゲームループへ統合する
   - 作業内容: 姿勢検出結果をアバター表示、壁判定、スコア更新へ接続し、モック姿勢から実入力へ切り替える。
   - 変更するファイル: `src/App.tsx`, `src/components/GameScreen.tsx`, `src/game/state.ts`, `src/rendering/canvasRenderer.ts`
   - 依存関係: 11, 13

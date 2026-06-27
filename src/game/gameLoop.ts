@@ -26,7 +26,10 @@ export function advanceWallProgress(
     wallPatterns.find((wallPattern) => wallPattern.id === gameState.activeWallPatternId) ??
     wallPatterns[gameState.wallSequenceIndex % wallPatterns.length];
   const judgment = judgeCollision({
-    playerArea: gameState.mockPose.bodyArea,
+    playerArea:
+      gameState.poseInputMode === "camera"
+        ? gameState.playerArea
+        : gameState.mockPose.bodyArea,
     wallPattern: activeWallPattern,
   });
   const nextWallSequenceIndex = (gameState.wallSequenceIndex + 1) % wallPatterns.length;

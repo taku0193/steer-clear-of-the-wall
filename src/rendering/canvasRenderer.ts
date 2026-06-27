@@ -1,7 +1,20 @@
-import type { MockPose, SafeArea, WallPattern } from "../game/types";
+import type {
+  MockPose,
+  PoseInputMode,
+  SafeArea,
+  WallPattern,
+} from "../game/types";
+import type {
+  NormalizedPoint,
+  PoseFrame,
+  PoseLandmarkName,
+} from "../pose/poseTypes";
 
 type CanvasRenderInput = {
   mockPose: MockPose;
+  poseFrame: PoseFrame | null;
+  poseInputMode: PoseInputMode;
+  playerArea: SafeArea | null;
   wallPattern: WallPattern;
   wallProgress: number;
 };
@@ -12,6 +25,27 @@ type Rect = {
   width: number;
   height: number;
 };
+
+const POSE_CONNECTIONS: readonly [
+  PoseLandmarkName,
+  PoseLandmarkName,
+][] = [
+  ["nose", "leftShoulder"],
+  ["nose", "rightShoulder"],
+  ["leftShoulder", "rightShoulder"],
+  ["leftShoulder", "leftElbow"],
+  ["leftElbow", "leftWrist"],
+  ["rightShoulder", "rightElbow"],
+  ["rightElbow", "rightWrist"],
+  ["leftShoulder", "leftHip"],
+  ["rightShoulder", "rightHip"],
+  ["leftHip", "rightHip"],
+  ["leftHip", "leftKnee"],
+  ["leftKnee", "leftAnkle"],
+  ["rightHip", "rightKnee"],
+  ["rightKnee", "rightAnkle"],
+];
+const MIN_DRAW_VISIBILITY = 0.4;
 
 export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderInput) {
   const context = canvas.getContext("2d");
@@ -24,13 +58,33 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
   const height = canvas.height;
   const wallRect = getWallRect(width, height, input.wallProgress);
   const safeRect = getNestedRect(wallRect, input.wallPattern.safeArea);
-  const poseRect = getCanvasRect(width, height, input.mockPose.bodyArea);
 
   context.clearRect(0, 0, width, height);
   drawBackground(context, width, height);
   drawDepthGuide(context, width, height, input.wallProgress);
   drawWall(context, wallRect, safeRect);
-  drawMockPose(context, poseRect);
+
+  if (input.poseInputMode === "camera") {
+    if (input.poseFrame?.detected) {
+      drawDetectedPose(context, width, height, input.poseFrame);
+
+      if (input.playerArea) {
+        drawPlayerArea(
+          context,
+          getCanvasRect(width, height, input.playerArea),
+        );
+      }
+    } else {
+      drawPoseNotDetected(context, width, height);
+    }
+
+    return;
+  }
+
+  drawMockPose(
+    context,
+    getCanvasRect(width, height, input.mockPose.bodyArea),
+  );
 }
 
 function getCanvasRect(canvasWidth: number, canvasHeight: number, area: SafeArea): Rect {
@@ -140,4 +194,87 @@ function drawMockPose(context: CanvasRenderingContext2D, poseRect: Rect) {
   context.arc(poseRect.x + poseRect.width / 2, poseRect.y - headRadius * 0.8, headRadius, 0, Math.PI * 2);
   context.fillStyle = "rgba(147, 197, 253, 0.78)";
   context.fill();
+}
+
+function drawDetectedPose(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  poseFrame: PoseFrame,
+) {
+  context.strokeStyle = "#93c5fd";
+  context.lineWidth = 6;
+  context.lineCap = "round";
+
+  for (const [startName, endName] of POSE_CONNECTIONS) {
+    const start = getVisiblePoint(poseFrame, startName);
+    const end = getVisiblePoint(poseFrame, endName);
+
+    if (!start || !end) {
+      continue;
+    }
+
+    context.beginPath();
+    context.moveTo((1 - start.x) * width, start.y * height);
+    context.lineTo((1 - end.x) * width, end.y * height);
+    context.stroke();
+  }
+
+  context.fillStyle = "#dbeafe";
+
+  for (const point of Object.values(poseFrame.landmarks)) {
+    if (!point || point.visibility < MIN_DRAW_VISIBILITY) {
+      continue;
+    }
+
+    context.beginPath();
+    context.arc((1 - point.x) * width, point.y * height, 6, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+function drawPlayerArea(context: CanvasRenderingContext2D, playerRect: Rect) {
+  context.fillStyle = "rgba(96, 165, 250, 0.12)";
+  context.fillRect(
+    playerRect.x,
+    playerRect.y,
+    playerRect.width,
+    playerRect.height,
+  );
+  context.strokeStyle = "rgba(147, 197, 253, 0.72)";
+  context.lineWidth = 2;
+  context.strokeRect(
+    playerRect.x,
+    playerRect.y,
+    playerRect.width,
+    playerRect.height,
+  );
+}
+
+function drawPoseNotDetected(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) {
+  context.fillStyle = "rgba(247, 247, 242, 0.76)";
+  context.font = "700 22px sans-serif";
+  context.textAlign = "center";
+  context.fillText(
+    "全身が映る位置に移動してください",
+    width / 2,
+    height / 2,
+  );
+}
+
+function getVisiblePoint(
+  poseFrame: PoseFrame,
+  name: PoseLandmarkName,
+): NormalizedPoint | null {
+  const point = poseFrame.landmarks[name];
+
+  if (!point || point.visibility < MIN_DRAW_VISIBILITY) {
+    return null;
+  }
+
+  return point;
 }

@@ -3,9 +3,15 @@ import { attachCameraStream, detachCameraStream } from "../camera/camera";
 
 type CameraPreviewProps = {
   stream: MediaStream;
+  onVideoElementChange?: (videoElement: HTMLVideoElement | null) => void;
+  visuallyHidden?: boolean;
 };
 
-export function CameraPreview({ stream }: CameraPreviewProps) {
+export function CameraPreview({
+  stream,
+  onVideoElementChange,
+  visuallyHidden = false,
+}: CameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -16,18 +22,23 @@ export function CameraPreview({ stream }: CameraPreviewProps) {
     }
 
     attachCameraStream(videoElement, stream);
+    onVideoElementChange?.(videoElement);
 
-    return () => detachCameraStream(videoElement);
-  }, [stream]);
+    return () => {
+      onVideoElementChange?.(null);
+      detachCameraStream(videoElement);
+    };
+  }, [onVideoElementChange, stream]);
 
   return (
     <video
       ref={videoRef}
-      className="camera-preview"
+      className={visuallyHidden ? "camera-video-source" : "camera-preview"}
       autoPlay
       muted
       playsInline
-      aria-label="カメラ映像のプレビュー"
+      aria-hidden={visuallyHidden || undefined}
+      aria-label={visuallyHidden ? undefined : "カメラ映像のプレビュー"}
     />
   );
 }
