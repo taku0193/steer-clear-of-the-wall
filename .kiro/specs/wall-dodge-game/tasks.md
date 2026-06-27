@@ -81,7 +81,7 @@
   - _Requirements: 2.2, 5.1, 5.2, 6.1_
   - _Boundary: Game State_
 
-- [ ] 9. 簡易Canvas描画でアバターと壁を表示する
+- [x] 9. 簡易Canvas描画でアバターと壁を表示する
   - 作業内容: モック姿勢と壁パターンをCanvas上に描画し、カメラ映像ではなくゲーム表現を主表示にする。
   - 変更するファイル: `src/rendering/canvasRenderer.ts`, `src/components/GameScreen.tsx`, `src/style.css`
   - 依存関係: 8

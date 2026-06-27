@@ -98,12 +98,21 @@ select {
 .playfield-placeholder {
   display: grid;
   min-height: 360px;
-  align-content: center;
   gap: 20px;
   border: 1px solid rgba(247, 247, 242, 0.16);
   border-radius: 8px;
   padding: 32px;
   background: rgba(16, 19, 21, 0.76);
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 12 / 7;
+  border: 1px solid rgba(247, 247, 242, 0.16);
+  border-radius: 8px;
+  background: #111827;
 }
 
 .eyebrow {
