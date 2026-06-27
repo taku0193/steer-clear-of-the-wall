@@ -144,7 +144,7 @@
   - _Requirements: 9.1, 9.2, 9.3_
   - _Boundary: App, Camera Adapter, Pose Adapter, Game State_
 
-- [ ] 16. 要件に対応したユニットテストを追加する
+- [x] 16. 要件に対応したユニットテストを追加する
   - 作業内容: 当たり判定、スコア計算、状態遷移の主要ロジックをテストする。
   - 変更するファイル: `package.json`, `src/game/collision.test.ts`, `src/game/scoring.test.ts`, `src/game/state.test.ts`
   - 依存関係: 11
