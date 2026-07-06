@@ -273,6 +273,11 @@ type RenderFrameInput = {
 - 各壁は、表示用の安全領域と判定用の安全領域を持つ。
 - 複雑な人型くり抜きではなく、矩形や単純な複合矩形から開始する。
 - 壁はプレイヤーに迫る進行度を持ち、判定位置に到達した時点で一度だけ判定する。
+- 壁パターンは垂直配置基準を持ち、現行壁は`top`として上端をCanvas上端へ固定する。
+- 将来の接地壁や浮遊壁などに備えて`ground`と`center`も型で許容し、配置判断を
+  描画コードの固定値にしない。
+- 現行壁の安全領域は上端位置を維持したまま高さを壁下端まで伸ばし、地面に接した
+  出入口として描画する。
 
 ### Wall Contract
 
@@ -286,9 +291,9 @@ type Rect = {
 
 type WallPattern = {
   id: string;
-  label: string;
-  safeZones: Rect[];
-  requiredLandmarks: PoseLandmarkName[];
+  name: string;
+  safeArea: Rect;
+  verticalAnchor: "top" | "ground" | "center";
   scoreValue: number;
 };
 
@@ -431,6 +436,7 @@ Responsibilities:
 - `src/game/collision.ts` — 当たり判定の純粋関数。
 - `src/game/scoring.ts` — スコア更新の純粋関数。
 - `src/rendering/canvasRenderer.ts` — アバターと壁のCanvas描画。
+- `src/rendering/wallGeometry.ts` — 進行率と配置基準から壁矩形を計算する純粋関数。
 - `src/components/*.tsx` — 画面単位の表示コンポーネント。
 
 ### 変更するファイル
@@ -571,6 +577,9 @@ interface ScoringService {
 | 5.3 | 少数壁パターン | Wall Pattern Data | WallPattern | 壁パターン設計 |
 | 5.4 | 安全領域表示 | Wall Pattern Data, Canvas Renderer | Rect | 壁パターン設計 |
 | 5.5 | 複雑な壁と高度レベル除外 | Wall Pattern Data | Boundary | Boundary Commitments |
+| 5.6 | 現行壁の画面上端固定 | Wall Pattern Data, Canvas Renderer | WallPattern | 壁パターン設計 |
+| 5.7 | 壁ごとの配置基準 | Wall Pattern Data, Wall Geometry | WallPattern | 壁パターン設計 |
+| 5.8 | 安全領域の地面接続 | Wall Pattern Data, Canvas Renderer | WallPattern | 壁パターン設計 |
 | 6.1 | 判定位置で比較 | Game State, Collision Logic | CollisionInput | データの流れ |
 | 6.2 | 成功表示 | Game State, GameScreen | JudgmentFeedback | データの流れ |
 | 6.3 | 失敗表示 | Game State, GameScreen | JudgmentFeedback | データの流れ |

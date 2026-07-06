@@ -38,10 +38,13 @@ export type SafeArea = {
   height: number;
 };
 
+export type WallVerticalAnchor = "top" | "ground" | "center";
+
 export type WallPattern = {
   id: string;
   name: string;
   safeArea: SafeArea;
+  verticalAnchor: WallVerticalAnchor;
   scoreValue: number;
 };
 

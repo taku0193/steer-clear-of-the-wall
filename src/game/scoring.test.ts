@@ -5,6 +5,7 @@ import type { WallPattern } from "./types";
 const wallPattern: WallPattern = {
   id: "score-wall",
   name: "スコア壁",
+  verticalAnchor: "ground",
   safeArea: {
     x: 0.25,
     y: 0.2,

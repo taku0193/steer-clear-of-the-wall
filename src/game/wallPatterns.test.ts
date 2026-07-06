@@ -21,6 +21,7 @@ describe("WALL_PATTERNS", () => {
 
     for (const pattern of WALL_PATTERNS) {
       expect(pattern.name.length).toBeGreaterThan(0);
+      expect(pattern.verticalAnchor).toBe("top");
       expect(pattern.scoreValue).toBeGreaterThan(0);
       expect(pattern.safeArea.x).toBeGreaterThanOrEqual(0);
       expect(pattern.safeArea.y).toBeGreaterThanOrEqual(0);
@@ -28,6 +29,14 @@ describe("WALL_PATTERNS", () => {
       expect(pattern.safeArea.height).toBeGreaterThan(0);
       expect(pattern.safeArea.x + pattern.safeArea.width).toBeLessThanOrEqual(1);
       expect(pattern.safeArea.y + pattern.safeArea.height).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("現行パターンの安全領域は壁の下端まで開いている", () => {
+    for (const pattern of WALL_PATTERNS) {
+      expect(
+        pattern.safeArea.y + pattern.safeArea.height,
+      ).toBeCloseTo(1);
     }
   });
 

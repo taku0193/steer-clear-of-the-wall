@@ -162,6 +162,17 @@
   - _Requirements: 1.1, 2.3, 2.4, 9.3, 9.4, 9.5_
   - _Boundary: Project Documentation, Validation_
 
+- [x] 18. 壁を画面上端へ固定し配置基準をデータ化する
+  - 作業内容: 壁パターンへ垂直配置基準を追加し、現行壁の上端を進行中もCanvas上端へ固定する。
+  - 変更するファイル: `src/game/types.ts`, `src/game/wallPatterns.ts`, `src/game/wallPatterns.test.ts`, `src/rendering/wallGeometry.ts`, `src/rendering/wallGeometry.test.ts`, `src/rendering/canvasRenderer.ts`
+  - 依存関係: 7, 9
+  - 完了条件: 現行3パターンが`top`を持ち、進行率にかかわらず壁矩形の上端がCanvas上端と一致する。
+  - 完了条件: 将来用の`ground`と`center`配置を壁データから指定できる。
+  - 完了条件: 現行3パターンの安全領域が壁下端まで開き、地面に接している。
+  - 確認方法: 壁矩形計算のユニットテスト、型チェック、ビルド、全ユニットテストを実行する。
+  - _Requirements: 5.6, 5.7, 5.8_
+  - _Boundary: Wall Pattern Data, Rendering Geometry_
+
 ## Requirements Coverage
 
 | Requirement | Covered by Tasks |
@@ -189,6 +200,9 @@
 | 5.3 | 7 |
 | 5.4 | 7, 9 |
 | 5.5 | 7 |
+| 5.6 | 18 |
+| 5.7 | 18 |
+| 5.8 | 18 |
 | 6.1 | 8, 10, 14, 16 |
 | 6.2 | 10, 11 |
 | 6.3 | 10, 11 |

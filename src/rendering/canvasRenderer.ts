@@ -17,6 +17,7 @@ import {
   type CanvasPoint,
 } from "./avatarGeometry";
 import type { CanvasViewport } from "./canvasViewport";
+import { calculateWallRect } from "./wallGeometry";
 
 type CanvasRenderInput = {
   viewport: CanvasViewport;
@@ -68,7 +69,12 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
 
   const width = viewport.cssWidth;
   const height = viewport.cssHeight;
-  const wallRect = getWallRect(width, height, input.wallProgress);
+  const wallRect = calculateWallRect(
+    width,
+    height,
+    input.wallProgress,
+    input.wallPattern.verticalAnchor,
+  );
   const safeRect = getNestedRect(wallRect, input.wallPattern.safeArea);
 
   context.setTransform(
@@ -137,20 +143,6 @@ function getNestedRect(parent: Rect, area: SafeArea): Rect {
     y: parent.y + area.y * parent.height,
     width: area.width * parent.width,
     height: area.height * parent.height,
-  };
-}
-
-function getWallRect(canvasWidth: number, canvasHeight: number, wallProgress: number): Rect {
-  const progress = Math.max(0, Math.min(wallProgress, 1));
-  const scale = 0.55 + progress * 0.45;
-  const width = canvasWidth * scale;
-  const height = canvasHeight * scale;
-
-  return {
-    x: (canvasWidth - width) / 2,
-    y: (canvasHeight - height) / 2,
-    width,
-    height,
   };
 }
 
