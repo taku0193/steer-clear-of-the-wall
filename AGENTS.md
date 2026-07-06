@@ -1,85 +1,106 @@
-# Agentic SDLC and Spec-Driven Development
+# Codex Project Instructions
 
-Kiro-style Spec-Driven Development on an agentic SDLC
+このリポジトリは、体を使って迫る壁を避けるブラウザゲーム
+`steer-clear-of-the-wall` の開発プロジェクトです。
+
+作業者はClaude CodeではなくCodexです。以後のエージェント作業では、
+本ファイルと `.kiro/steering/` をプロジェクトメモリとして扱ってください。
+
+## 基本方針
+
+- 思考は英語で行ってもよいが、ユーザーへの返答とプロジェクト内Markdownは日本語で書く。
+- 実装前に、必ず既存のファイル構成、README、`package.json`、`src/` 配下を確認する。
+- 現時点で `package.json` と `src/` が存在しない場合は、初期プロジェクトとして扱い、推測で実装済み構成を書かない。
+- コード変更は、ユーザーが明示的に実装を依頼した場合だけ行う。
+- 仕様駆動で進める。要求、設計、タスク、実装の順で確認し、実装へ飛ばない。
+- SSH接続したUbuntuサーバー上での開発を前提にする。
 
 ## Project Memory
-Project memory keeps persistent guidance (steering, specs notes, component docs) so Codex honors your standards each run. Treat it as the long-lived source of truth for patterns, conventions, and decisions.
 
-- Use `.kiro/steering/` for project-wide policies: architecture principles, naming schemes, security constraints, tech stack decisions, api standards, etc.
-- Use local `AGENTS.md` files for feature or library context (e.g. `src/lib/payments/AGENTS.md`): describe domain assumptions, API contracts, or testing conventions specific to that folder. Codex auto-loads these when working in the matching path.
-- Specs notes stay with each spec (under `.kiro/specs/`) to guide specification-level workflows.
-
-## Project Context
-
-### Paths
-- Steering: `.kiro/steering/`
+- Project-wide policies: `.kiro/steering/`
 - Specs: `.kiro/specs/`
+- Folder-specific notes: local `AGENTS.md`
 
-### Steering vs Specification
+`.kiro/steering/` は長期的な判断基準です。実装詳細の羅列ではなく、
+新しいコードが同じ方針に従えば更新不要になる粒度で書いてください。
 
-**Steering** (`.kiro/steering/`) - Guide AI with project-wide rules and context
-**Specs** (`.kiro/specs/`) - Formalize development process for individual features
+## Product Direction
 
-### Active Specifications
-- Check `.kiro/specs/` for active specifications
-- Use `$kiro-spec-status [feature-name]` to check progress
+作るゲームは、カメラの前で体を動かし、画面奥から迫る壁の穴に
+アバターを合わせて避ける体験型ゲームです。
 
-## Development Guidelines
-- Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md, research.md, validation reports) MUST be written in the target language configured for this specification (see spec.json.language).
+中心となる流れは次の通りです。
 
-## Minimal Workflow
-- Phase 0 (optional): `$kiro-steering`, `$kiro-steering-custom`
-- Discovery: `$kiro-discovery "idea"` — determines action path, writes brief.md + roadmap.md for multi-spec projects
-- Phase 1 (Specification):
-  - Single spec: `$kiro-spec-quick {feature} [--auto]` or step by step:
-    - `$kiro-spec-init "description"`
-    - `$kiro-spec-requirements {feature}`
-    - `$kiro-validate-gap {feature}` (optional: for existing codebase)
-    - `$kiro-spec-design {feature} [-y]`
-    - `$kiro-validate-design {feature}` (optional: design review)
-    - `$kiro-spec-tasks {feature} [-y]`
-  - Multi-spec: `$kiro-spec-batch` — creates all specs from roadmap.md in parallel by dependency wave
-- Phase 2 (Implementation): `$kiro-impl {feature} [tasks]`
-  - Without task numbers: autonomous mode (subagent per task + independent review + final validation)
-  - With task numbers: manual mode (selected tasks in main context, still reviewer-gated before completion)
-  - `$kiro-validate-impl {feature}` (standalone re-validation)
-- Progress check: `$kiro-spec-status {feature}` (use anytime)
+1. Camera Input
+2. Pose Detection
+3. Avatar Display
+4. Wall Pattern
+5. Collision Judgment
+6. Score / Result
 
-## Skills Structure
-Skills are located in `.agents/skills/kiro-*/SKILL.md`
-- Each skill is a directory with a `SKILL.md` file
-- Use `/skills` to inspect currently available skills
-- Invoke a skill directly with `$kiro-<skill-name>`
-- `kiro-review` — task-local adversarial review protocol used by reviewer subagents
-- `kiro-debug` — root-cause-first debug protocol used by debugger subagents
-- `kiro-verify-completion` — fresh-evidence gate before success or completion claims
-- **If there is even a 1% chance a skill applies to the current task, invoke it.** Do not skip skills because the task seems simple.
+カメラ映像をそのまま主役にするのではなく、検出した姿勢から
+プレイヤーをアバターとして表示し、ゲーム画面として成立させることを重視します。
 
-## Collaboration Modes (Optional)
-Enable collaboration modes in `~/.codex/config.toml` to let Codex choose focused execution modes for longer tasks:
+## Reference Repository Policy
 
-```toml
-[features]
-collaboration_modes = true
-```
+参考リポジトリ:
 
-## Multi-Agent (Experimental)
-If multi-agent is available, use it to parallelize independent research and validation within skills. Enable in `~/.codex/config.toml`:
+- `https://github.com/taku0193/ai-wall`
 
-```toml
-[features]
-multi_agent = true
-```
+参考にしてよい範囲:
 
-Skills with "Parallel Research" sections list independent work items that benefit from sub-agent spawning when this feature is active.
+- 上記のシステムの流れ
+- 体験型ゲームとしての画面遷移の考え方
+- カメラ開始後に姿勢検出、アバター描画、ゲーム開始へ進む順序
+- 壁パターン、衝突判定、スコア、結果表示という責務分割の考え方
+- MediaPipeなど、姿勢検出ライブラリを利用するという技術選択の方向性
 
-## Development Rules
-- 3-phase approval workflow: Requirements → Design → Tasks → Implementation
-- Human review required each phase; use `-y` only for intentional fast-track
-- Keep steering current and verify alignment with `$kiro-spec-status`
-- Follow the user's instructions precisely, and within that scope act autonomously: gather the necessary context and complete the requested work end-to-end in this run, asking questions only when essential information is missing or the instructions are critically ambiguous.
+コピーしてはいけない範囲:
 
-## Steering Configuration
-- Load entire `.kiro/steering/` as project memory
-- Default files: `product.md`, `tech.md`, `structure.md`
-- Custom files are supported (managed via `$kiro-steering-custom`)
+- ソースコード、型定義、関数、コンポーネント、CSS、設定ファイルの直接コピー
+- ファイル構成やモジュール分割のそのままの移植
+- 壁パターン定義、判定ロジック、スコア計算式、文言、UIデザインの丸写し
+- READMEやコメントの文章の流用
+
+参考リポジトリは、仕様検討時の概念参照に留めてください。このプロジェクトでは、
+同じ体験コンセプトをCodex向けの仕様と設計から独自に実装します。
+
+## Development Workflow
+
+### Steering
+
+- `.kiro/steering/product.md`: 何を作るか、誰にどんな体験を提供するか
+- `.kiro/steering/tech.md`: 技術選定、実行環境、品質基準
+- `.kiro/steering/structure.md`: 将来のコード配置、命名、責務分離
+
+### Specification
+
+- 新機能は `.kiro/specs/` に仕様を作ってから実装する。
+- 要求、設計、タスクの各段階で人間の確認を挟む。
+- ユーザーが明示しない限り、`-y` 相当の自動承認で進めない。
+
+### Implementation
+
+- 実装時は既存の構成と steering を先に読む。
+- カメラ、姿勢検出、描画、ゲーム進行、判定、スコアは責務を分ける。
+- ブラウザAPIや姿勢検出ライブラリに依存する処理は、UIや純粋なゲームロジックから分離する。
+- ユーザーが「まだ実装しない」と言った場合、コード・設定・依存関係は変更しない。
+
+## Quality Bar
+
+- カメラ権限、姿勢検出失敗、ライブラリ読み込み失敗、非対応ブラウザをエラー状態として扱う。
+- ゲームループや描画処理は、停止、再開、リトライで破綻しないように設計する。
+- 衝突判定やスコア計算は、テスト可能な純粋ロジックに寄せる。
+- UIは体験型ゲームとして分かりやすく、初回ユーザーが迷わない状態遷移にする。
+- 実装後は、型チェック、ビルド、可能な範囲のテストを実行して結果を報告する。
+
+## Current Repository State
+
+2026-06-24時点では、確認できる主要ファイルは次の通りです。
+
+- `README.md`: プロジェクト名のみ
+- `AGENTS.md`: 本ファイル
+- `.kiro/steering/`: プロジェクト方針を保持
+
+`package.json` と `src/` はまだ存在しません。今後の実装では、初期構成の選定から
+仕様に基づいて進めてください。

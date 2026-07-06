@@ -103,6 +103,7 @@
 2. While プレイヤーの姿勢が検出されている, the Wall Dodge Game shall アバター表示をプレイヤーの動きに合わせて更新する
 3. If プレイヤーの姿勢が一時的に検出できない, the Wall Dodge Game shall 姿勢が検出できない状態をプレイヤーに示す
 4. The Wall Dodge Game shall カメラ映像そのものではなく、ゲーム内表現としてのアバターを主表示にする
+5. While プレイ中である, the Wall Dodge Game shall アバターを迫ってくる壁の方向へ向いた後ろ姿として表示する
 
 ### Requirement 4: カウントダウンとゲーム開始
 
@@ -126,6 +127,9 @@
 3. The Wall Dodge Game shall 最小構成として1種類または数種類の壁パターンを提供する
 4. The Wall Dodge Game shall 壁パターンごとに、プレイヤーが合わせるべき穴または安全領域を表示する
 5. The Wall Dodge Game shall 複雑な壁パターンや高度なレベル管理を今回の範囲に含めない
+6. While 現行の壁がプレイヤーへ迫っている, the Wall Dodge Game shall 壁の上端をゲーム画面の上端へ固定する
+7. The Wall Dodge Game shall 将来の壁種類ごとに配置基準をデータで指定できる
+8. The Wall Dodge Game shall 現行壁の安全領域を壁の下端まで開き、地面に接した穴として表示する
 
 ### Requirement 6: 衝突判定とフィードバック
 

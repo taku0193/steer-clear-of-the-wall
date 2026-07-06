@@ -9,7 +9,7 @@
 
 ## Tasks
 
-- [ ] 1. 開発基盤を最小構成で作成する
+- [x] 1. 開発基盤を最小構成で作成する
   - 作業内容: Vite + React + TypeScriptの最小アプリとして起動できる基盤を作る。
   - 変更するファイル: `package.json`, `index.html`, `tsconfig.json`, `vite.config.ts`, `src/main.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: なし
@@ -18,7 +18,7 @@
   - _Requirements: 1.1, 9.4, 9.5_
   - _Boundary: Frontend Foundation_
 
-- [ ] 2. 画面状態の型と初期状態を定義する
+- [x] 2. 画面状態の型と初期状態を定義する
   - 作業内容: `title`, `preparing`, `countdown`, `playing`, `result`, `error` の状態を扱う土台を作る。
   - 変更するファイル: `src/game/types.ts`, `src/game/state.ts`, `src/App.tsx`
   - 依存関係: 1
@@ -27,7 +27,7 @@
   - _Requirements: 1.1, 1.4, 4.4_
   - _Boundary: Game State_
 
-- [ ] 3. タイトル画面と開始導線を作成する
+- [x] 3. タイトル画面と開始導線を作成する
   - 作業内容: 初回ユーザーがゲーム内容を短く理解し、開始操作できる画面を作る。
   - 変更するファイル: `src/components/TitleScreen.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: 2
@@ -36,7 +36,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
   - _Boundary: Screen Components, App_
 
-- [ ] 4. 結果画面とエラー画面の最小UIを作成する
+- [x] 4. 結果画面とエラー画面の最小UIを作成する
   - 作業内容: ゲーム終了時とエラー時に、次に取る行動が分かる画面を作る。
   - 変更するファイル: `src/components/ResultScreen.tsx`, `src/components/ErrorScreen.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: 2
@@ -45,7 +45,7 @@
   - _Requirements: 8.3, 8.4, 8.5, 9.1, 9.2, 9.3_
   - _Boundary: Screen Components, App_
 
-- [ ] 5. カウントダウンからプレイ開始までの状態遷移を作成する
+- [x] 5. カウントダウンからプレイ開始までの状態遷移を作成する
   - 作業内容: 準備完了後にカウントダウンを表示し、終了後にプレイ状態へ進める。
   - 変更するファイル: `src/game/state.ts`, `src/App.tsx`, `src/components/GameScreen.tsx`, `src/style.css`
   - 依存関係: 3
@@ -54,7 +54,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
   - _Boundary: Game State, GameScreen_
 
-- [ ] 6. プレイ画面のHUDと制限時間表示を作成する
+- [x] 6. プレイ画面のHUDと制限時間表示を作成する
   - 作業内容: プレイ中にスコア、残り時間、検出状態、フィードバックを表示できるHUDを作る。
   - 変更するファイル: `src/components/GameScreen.tsx`, `src/App.tsx`, `src/style.css`
   - 依存関係: 5
@@ -63,7 +63,7 @@
   - _Requirements: 7.1, 7.4, 8.1, 8.2, 8.3_
   - _Boundary: GameScreen, Game State_
 
-- [ ] 7. 壁パターンの最小データを作成する
+- [x] 7. 壁パターンの最小データを作成する
   - 作業内容: 中央、左、右など少数の壁パターンを、表示用と判定用の安全領域として定義する。
   - 変更するファイル: `src/game/types.ts`, `src/game/wallPatterns.ts`
   - 依存関係: 2
@@ -72,7 +72,7 @@
   - _Requirements: 5.3, 5.4, 5.5_
   - _Boundary: Wall Pattern Data_
 
-- [ ] 8. モック姿勢と壁進行でゲームループの土台を作成する
+- [x] 8. モック姿勢と壁進行でゲームループの土台を作成する
   - 作業内容: カメラなしで固定または簡易操作の姿勢データを使い、壁が迫る進行を表現する。
   - 変更するファイル: `src/game/types.ts`, `src/game/state.ts`, `src/App.tsx`, `src/components/GameScreen.tsx`
   - 依存関係: 6, 7
@@ -81,16 +81,16 @@
   - _Requirements: 2.2, 5.1, 5.2, 6.1_
   - _Boundary: Game State_
 
-- [ ] 9. 簡易Canvas描画でアバターと壁を表示する
-  - 作業内容: モック姿勢と壁パターンをCanvas上に描画し、カメラ映像ではなくゲーム表現を主表示にする。
+- [x] 9. 簡易Canvas描画でアバターと壁を表示する
+  - 作業内容: モック姿勢と実カメラ姿勢を、迫る壁へ向いた後ろ姿アバターとしてCanvas上に描画し、カメラ映像や骨格線ではなくゲーム表現を主表示にする。
   - 変更するファイル: `src/rendering/canvasRenderer.ts`, `src/components/GameScreen.tsx`, `src/style.css`
   - 依存関係: 8
-  - 完了条件: プレイ画面にアバター、安全領域、迫る壁が表示され、検出不能時の表示も用意されている。
-  - 確認方法: ブラウザでプレイ画面を開き、カメラ映像ではなくCanvas上のアバターと壁が見えることを確認する。
-  - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.1, 5.2, 5.4_
+  - 完了条件: プレイ画面に頭、胴体、腕、脚を持つ後ろ姿アバター、安全領域、迫る壁が表示され、検出不能時の表示も用意されている。
+  - 確認方法: ブラウザでプレイ画面を開き、カメラ映像や骨格線ではなくCanvas上の壁向きアバターと壁が見えることを確認する。
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 5.1, 5.2, 5.4_
   - _Boundary: Canvas Renderer, GameScreen_
 
-- [ ] 10. 簡易当たり判定を作成する
+- [x] 10. 簡易当たり判定を作成する
   - 作業内容: 姿勢データと壁の安全領域を比較し、成功、失敗、検出不能を判定する。
   - 変更するファイル: `src/game/types.ts`, `src/game/collision.ts`, `src/game/state.ts`
   - 依存関係: 7, 8
@@ -99,7 +99,7 @@
   - _Requirements: 4.2, 6.1, 6.2, 6.3, 6.4, 6.5_
   - _Boundary: Collision Logic, Game State_
 
-- [ ] 11. スコア計算と判定フィードバックを接続する
+- [x] 11. スコア計算と判定フィードバックを接続する
   - 作業内容: 成功時にスコアを加算し、失敗や検出不能の表示をプレイ画面へ反映する。
   - 変更するファイル: `src/game/types.ts`, `src/game/scoring.ts`, `src/game/state.ts`, `src/components/GameScreen.tsx`, `src/components/ResultScreen.tsx`
   - 依存関係: 10
@@ -108,7 +108,7 @@
   - _Requirements: 6.2, 6.3, 6.4, 7.1, 7.2, 7.3, 7.4, 7.5, 8.4_
   - _Boundary: Scoring Logic, Game State, Screen Components_
 
-- [ ] 12. カメラ入力アダプターを作成する
+- [x] 12. カメラ入力アダプターを作成する
   - 作業内容: ユーザー操作後に映像のみを要求し、取得、停止、エラー分類を行うカメラ境界を作る。
   - 変更するファイル: `src/camera/camera.ts`, `src/game/types.ts`, `src/App.tsx`, `src/components/ErrorScreen.tsx`
   - 依存関係: 3, 4
@@ -117,7 +117,7 @@
   - _Requirements: 2.1, 2.3, 2.4, 9.3_
   - _Boundary: Camera Adapter, ErrorScreen_
 
-- [ ] 13. 姿勢検出アダプターを作成する
+- [x] 13. 姿勢検出アダプターを作成する
   - 作業内容: 姿勢検出ライブラリを初期化し、外部ライブラリの出力をゲーム用の姿勢データに変換する。
   - 変更するファイル: `package.json`, `src/pose/poseTypes.ts`, `src/pose/poseDetector.ts`, `src/game/types.ts`, `src/components/ErrorScreen.tsx`
   - 依存関係: 12
@@ -126,7 +126,7 @@
   - _Requirements: 2.1, 2.2, 2.5, 3.1, 3.2, 3.3_
   - _Boundary: Pose Adapter, ErrorScreen_
 
-- [ ] 14. 実カメラ姿勢データをゲームループへ統合する
+- [x] 14. 実カメラ姿勢データをゲームループへ統合する
   - 作業内容: 姿勢検出結果をアバター表示、壁判定、スコア更新へ接続し、モック姿勢から実入力へ切り替える。
   - 変更するファイル: `src/App.tsx`, `src/components/GameScreen.tsx`, `src/game/state.ts`, `src/rendering/canvasRenderer.ts`
   - 依存関係: 11, 13
@@ -135,7 +135,7 @@
   - _Requirements: 2.1, 2.2, 3.1, 3.2, 4.1, 4.3, 5.1, 5.2, 6.1, 7.1, 8.1, 8.3_
   - _Boundary: App, Pose Adapter, Game State, Canvas Renderer_
 
-- [ ] 15. 再試行とリソース解放を仕上げる
+- [x] 15. 再試行とリソース解放を仕上げる
   - 作業内容: 結果画面やエラー画面から再試行したときに、状態、カメラ、姿勢検出、描画ループが破綻しないようにする。
   - 変更するファイル: `src/App.tsx`, `src/camera/camera.ts`, `src/pose/poseDetector.ts`, `src/game/state.ts`, `src/components/ResultScreen.tsx`, `src/components/ErrorScreen.tsx`
   - 依存関係: 14
@@ -144,7 +144,7 @@
   - _Requirements: 9.1, 9.2, 9.3_
   - _Boundary: App, Camera Adapter, Pose Adapter, Game State_
 
-- [ ] 16. 要件に対応したユニットテストを追加する
+- [x] 16. 要件に対応したユニットテストを追加する
   - 作業内容: 当たり判定、スコア計算、状態遷移の主要ロジックをテストする。
   - 変更するファイル: `package.json`, `src/game/collision.test.ts`, `src/game/scoring.test.ts`, `src/game/state.test.ts`
   - 依存関係: 11
@@ -153,7 +153,7 @@
   - _Requirements: 4.2, 6.1, 6.4, 6.5, 7.2, 8.1, 8.3_
   - _Boundary: Game Domain Tests_
 
-- [ ] 17. 最小E2E相当の手動確認とREADME更新を行う
+- [x] 17. 最小E2E相当の手動確認とREADME更新を行う
   - 作業内容: 開発サーバー起動、ブラウザ確認、カメラ利用条件、基本操作をREADMEに反映する。
   - 変更するファイル: `README.md`
   - 依存関係: 15, 16
@@ -161,6 +161,17 @@
   - 確認方法: READMEの手順だけで開発サーバー起動と基本確認の流れを追えることを確認する。
   - _Requirements: 1.1, 2.3, 2.4, 9.3, 9.4, 9.5_
   - _Boundary: Project Documentation, Validation_
+
+- [x] 18. 壁を画面上端へ固定し配置基準をデータ化する
+  - 作業内容: 壁パターンへ垂直配置基準を追加し、現行壁の上端を進行中もCanvas上端へ固定する。
+  - 変更するファイル: `src/game/types.ts`, `src/game/wallPatterns.ts`, `src/game/wallPatterns.test.ts`, `src/rendering/wallGeometry.ts`, `src/rendering/wallGeometry.test.ts`, `src/rendering/canvasRenderer.ts`
+  - 依存関係: 7, 9
+  - 完了条件: 現行3パターンが`top`を持ち、進行率にかかわらず壁矩形の上端がCanvas上端と一致する。
+  - 完了条件: 将来用の`ground`と`center`配置を壁データから指定できる。
+  - 完了条件: 現行3パターンの安全領域が壁下端まで開き、地面に接している。
+  - 確認方法: 壁矩形計算のユニットテスト、型チェック、ビルド、全ユニットテストを実行する。
+  - _Requirements: 5.6, 5.7, 5.8_
+  - _Boundary: Wall Pattern Data, Rendering Geometry_
 
 ## Requirements Coverage
 
@@ -179,6 +190,7 @@
 | 3.2 | 9, 13, 14 |
 | 3.3 | 9, 13 |
 | 3.4 | 9 |
+| 3.5 | 9 |
 | 4.1 | 5, 14 |
 | 4.2 | 5, 10, 16 |
 | 4.3 | 5, 14 |
@@ -188,6 +200,9 @@
 | 5.3 | 7 |
 | 5.4 | 7, 9 |
 | 5.5 | 7 |
+| 5.6 | 18 |
+| 5.7 | 18 |
+| 5.8 | 18 |
 | 6.1 | 8, 10, 14, 16 |
 | 6.2 | 10, 11 |
 | 6.3 | 10, 11 |

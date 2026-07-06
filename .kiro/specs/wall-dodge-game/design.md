@@ -241,11 +241,16 @@ type PoseFrame = {
 
 ### Design
 
-- アバターは `PoseFrame` のランドマークを使って簡単な棒人間または抽象的な身体線として描画する。
+- アバターは `PoseFrame` のランドマークを使い、頭、胴体、腕、脚を面と太さのある
+  シルエットとして描画する。ランドマーク点や骨格線は通常表示しない。
+- アバターは迫ってくる壁を見ている後ろ姿とし、顔を描かず、後頭部、背面の衣服、
+  背中のラインによって向きを伝える。
+- モック姿勢も実カメラ姿勢と同じ配色と後ろ姿の身体表現を使用する。
 - カメラ映像そのものを主表示にしない。
 - 検出中はランドマーク位置に合わせて更新する。
 - 検出不能時は、アバターを薄くする、または「姿勢を検出できません」と表示する。
-- 初期実装では見た目の凝ったキャラクターではなく、判定対象が分かる簡潔な表現にする。
+- 画像素材や3Dモデルは追加せず、Canvas 2Dの図形で描画する。
+- 判定領域はアバターより背面へ薄く描画し、キャラクターの視認性を妨げない。
 
 ### Rendering Contract
 
@@ -268,6 +273,11 @@ type RenderFrameInput = {
 - 各壁は、表示用の安全領域と判定用の安全領域を持つ。
 - 複雑な人型くり抜きではなく、矩形や単純な複合矩形から開始する。
 - 壁はプレイヤーに迫る進行度を持ち、判定位置に到達した時点で一度だけ判定する。
+- 壁パターンは垂直配置基準を持ち、現行壁は`top`として上端をCanvas上端へ固定する。
+- 将来の接地壁や浮遊壁などに備えて`ground`と`center`も型で許容し、配置判断を
+  描画コードの固定値にしない。
+- 現行壁の安全領域は上端位置を維持したまま高さを壁下端まで伸ばし、地面に接した
+  出入口として描画する。
 
 ### Wall Contract
 
@@ -281,9 +291,9 @@ type Rect = {
 
 type WallPattern = {
   id: string;
-  label: string;
-  safeZones: Rect[];
-  requiredLandmarks: PoseLandmarkName[];
+  name: string;
+  safeArea: Rect;
+  verticalAnchor: "top" | "ground" | "center";
   scoreValue: number;
 };
 
@@ -426,6 +436,7 @@ Responsibilities:
 - `src/game/collision.ts` — 当たり判定の純粋関数。
 - `src/game/scoring.ts` — スコア更新の純粋関数。
 - `src/rendering/canvasRenderer.ts` — アバターと壁のCanvas描画。
+- `src/rendering/wallGeometry.ts` — 進行率と配置基準から壁矩形を計算する純粋関数。
 - `src/components/*.tsx` — 画面単位の表示コンポーネント。
 
 ### 変更するファイル
@@ -556,6 +567,7 @@ interface ScoringService {
 | 3.2 | 動きに合わせて更新 | Pose Adapter, Canvas Renderer | PoseFrame | データの流れ |
 | 3.3 | 姿勢未検出状態を表示 | Pose Adapter, GameScreen | PoseFrame | エラー処理 |
 | 3.4 | カメラ映像でなくアバター主表示 | Canvas Renderer, GameScreen | RenderFrameInput | 画面構成 |
+| 3.5 | 壁を向いた後ろ姿アバター | Canvas Renderer | PoseFrame, RenderFrameInput | アバター表示の設計 |
 | 4.1 | 準備完了後カウントダウン | Game State | GamePhase | 状態遷移 |
 | 4.2 | カウントダウン中は判定しない | Game State, Collision Logic | GamePhase | 状態遷移 |
 | 4.3 | カウントダウン後プレイへ | Game State | GamePhase | 状態遷移 |
@@ -565,6 +577,9 @@ interface ScoringService {
 | 5.3 | 少数壁パターン | Wall Pattern Data | WallPattern | 壁パターン設計 |
 | 5.4 | 安全領域表示 | Wall Pattern Data, Canvas Renderer | Rect | 壁パターン設計 |
 | 5.5 | 複雑な壁と高度レベル除外 | Wall Pattern Data | Boundary | Boundary Commitments |
+| 5.6 | 現行壁の画面上端固定 | Wall Pattern Data, Canvas Renderer | WallPattern | 壁パターン設計 |
+| 5.7 | 壁ごとの配置基準 | Wall Pattern Data, Wall Geometry | WallPattern | 壁パターン設計 |
+| 5.8 | 安全領域の地面接続 | Wall Pattern Data, Canvas Renderer | WallPattern | 壁パターン設計 |
 | 6.1 | 判定位置で比較 | Game State, Collision Logic | CollisionInput | データの流れ |
 | 6.2 | 成功表示 | Game State, GameScreen | JudgmentFeedback | データの流れ |
 | 6.3 | 失敗表示 | Game State, GameScreen | JudgmentFeedback | データの流れ |
