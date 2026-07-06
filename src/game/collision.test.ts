@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { judgeCollision } from "./collision";
+import { COLLISION_TOLERANCE, judgeCollision } from "./collision";
 import type { WallPattern } from "./types";
 
 const wallPattern: WallPattern = {
@@ -41,10 +41,26 @@ describe("judgeCollision", () => {
     expect(result.type).toBe("success");
   });
 
-  it("プレイヤー領域がsafeAreaからはみ出す場合は失敗を返す", () => {
+  it("許容幅内のはみ出しは成功を返す", () => {
     const result = judgeCollision({
       playerArea: {
-        x: 0.2,
+        x: wallPattern.safeArea.x - COLLISION_TOLERANCE,
+        y: wallPattern.safeArea.y - COLLISION_TOLERANCE,
+        width:
+          wallPattern.safeArea.width + COLLISION_TOLERANCE * 2,
+        height:
+          wallPattern.safeArea.height + COLLISION_TOLERANCE * 2,
+      },
+      wallPattern,
+    });
+
+    expect(result.type).toBe("success");
+  });
+
+  it("許容幅を超えてsafeAreaからはみ出す場合は失敗を返す", () => {
+    const result = judgeCollision({
+      playerArea: {
+        x: 0.19,
         y: 0.25,
         width: 0.4,
         height: 0.5,

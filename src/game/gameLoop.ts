@@ -4,6 +4,10 @@ import { calculateScore } from "./scoring";
 
 export const WALL_PROGRESS_STEP = 0.25;
 export const WALL_PROGRESS_PASSED = 1;
+export const GAME_TICK_INTERVAL_MS = 1000;
+export const WALL_TICK_INTERVAL_MS = 600;
+export const WALL_CYCLE_DURATION_MS =
+  WALL_TICK_INTERVAL_MS / WALL_PROGRESS_STEP;
 
 export function advanceWallProgress(
   gameState: GameState,

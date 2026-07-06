@@ -113,6 +113,53 @@
 3. The Fullscreen Game UI shall 結果、エラー、再試行、タイトル復帰の画面遷移を維持する
 4. The Fullscreen Game UI shall 既存の型チェック、ビルド、ユニットテストが成功する状態を維持する
 
+### Requirement 8: ゲーム領域とアバター縮尺
+
+**Objective:** As a プレイヤー, I want 広いゲーム領域に適切な大きさのアバターが表示される, so that カメラとの距離を細かく調整せずに壁を避けられる
+
+#### Acceptance Criteria
+
+1. While プレイ中である, the Fullscreen Game UI shall 壁を画面内で大きく表示し、HUDが覆う領域を抑える
+2. While 姿勢を検出できている, the Fullscreen Game UI shall 身体中心を維持したままアバターをカメラ入力より小さい縮尺で表示する
+3. If プレイヤーがカメラへ近く大きく検出される, the Fullscreen Game UI shall アバターの最大幅と最大高さを制限する
+4. The Fullscreen Game UI shall アバター表示と当たり判定領域へ同じ縮尺変換を適用する
+5. While モック姿勢モードである, the Fullscreen Game UI shall 実カメラ用の縮尺に近い大きさでアバターを表示する
+
+### Requirement 9: 滑らかな壁進行
+
+**Objective:** As a プレイヤー, I want 壁が連続的に迫って見える, so that 壁との距離と回避タイミングを直感的に判断できる
+
+#### Acceptance Criteria
+
+1. While 壁が進行中である, the Fullscreen Game UI shall ブラウザの描画フレームに合わせて壁位置を補間する
+2. While 論理的な壁進行が600ミリ秒間隔で更新される, the Fullscreen Game UI shall 更新間の表示を連続的に変化させる
+3. When 新しい壁へ切り替わる, the Fullscreen Game UI shall 表示進行率を新しい壁の開始位置へ戻す
+4. The Fullscreen Game UI shall 表示補間によって壁の判定タイミング、スコア、ミス数を変更しない
+5. The Fullscreen Game UI shall 1枚の壁が約2.4秒で判定位置へ到達する速度で進行する
+
+### Requirement 10: 本人選択式アバター
+
+**Objective:** As a プレイヤー, I want 自分で好みのアバター外見を選べる, so that カメラ画像から属性を推定されずに自分らしい見た目で遊べる
+
+#### Acceptance Criteria
+
+1. While カメラ準備中である, the Fullscreen Game UI shall 男性風、女性風、ニュートラルのアバター選択肢を表示する
+2. When プレイヤーが外見を選ぶ, the Fullscreen Game UI shall 選択状態を明確に表示する
+3. When プレイ状態へ移行する, the Fullscreen Game UI shall 選択した配色、服装、髪型をアバターへ反映する
+4. The Fullscreen Game UI shall カメラ画像から性別または性自認を推定しない
+5. The Fullscreen Game UI shall 未選択時にニュートラルを使用する
+
+### Requirement 11: 判定の許容幅
+
+**Objective:** As a プレイヤー, I want 穴の境界付近でも過度に失敗にならない, so that 姿勢検出の揺れを気にせず体を動かせる
+
+#### Acceptance Criteria
+
+1. When 壁との当たり判定を行う, the Fullscreen Game UI shall 安全領域の各辺へ正規化座標`0.05`の許容幅を適用する
+2. If プレイヤー領域が許容幅内にはみ出す, the Fullscreen Game UI shall 回避成功として扱う
+3. If プレイヤー領域が許容幅を超えてはみ出す, the Fullscreen Game UI shall 回避失敗として扱う
+4. The Fullscreen Game UI shall 姿勢未検出時の判定不能を維持する
+
 ## 手動確認観点
 
 - プレイ開始後、Canvasがブラウザ表示領域全体へ広がる。
@@ -120,5 +167,9 @@
 - ブラウザをリサイズしても、Canvas、壁、アバター、HUDが追従する。
 - 高DPIディスプレイでCanvasが過度にぼやけない。
 - 実カメラとモック姿勢の両方で表示と判定が動作する。
+- カメラとの距離を変えてもアバターが画面を過度に占有しない。
+- 壁が段階的に飛ばず、連続的に手前へ迫って見える。
+- 準備画面で選んだアバター外見がプレイ画面へ反映される。
+- 安全領域の境界付近では許容幅内の姿勢が成功になる。
 - 姿勢未検出、成功、失敗の表示がプレイ中に読み取れる。
 - プレイ中に不要な縦スクロールや横スクロールが発生しない。

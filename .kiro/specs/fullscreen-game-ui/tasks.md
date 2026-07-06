@@ -57,6 +57,45 @@
   - _Requirements: 1.1-1.4, 2.1-2.4, 3.1-3.4, 4.1-4.5, 5.1-5.3, 6.1-6.4, 7.1-7.4_
   - _Boundary: Validation_
 
+- [x] 6. ゲーム領域を広く見せ、アバター縮尺を調整する
+  - 作業内容: 壁の初期表示を拡大してHUDを小型化し、カメラ姿勢を身体中心基準で縮小する。近距離では最大サイズを制限する。
+  - 変更するファイル: `src/game/state.ts`, `src/game/state.test.ts`, `src/game/mockPose.ts`, `src/App.tsx`, `src/rendering/canvasRenderer.ts`, `src/style.css`
+  - 依存関係: 4
+  - 完了条件: アバターと判定領域に同じ縮尺変換が適用され、身体中心を維持し、近距離でも最大幅と最大高さを超えない。
+  - 完了条件: 壁が出現直後から従来より大きく表示され、HUDの占有面積が減る。
+  - 確認方法: 姿勢縮尺のユニットテスト、型チェック、ビルド、全ユニットテストを実行する。
+  - _Requirements: 8.1-8.5_
+  - _Boundary: Game Pose Normalization, Canvas Renderer, Application Styling_
+
+- [x] 7. 壁進行表示を描画フレーム単位で補間する
+  - 作業内容: 壁の論理進行率を基準に、`requestAnimationFrame`でCanvasへ渡す表示進行率を連続更新する。
+  - 変更するファイル: `src/game/gameLoop.ts`, `src/App.tsx`, `src/rendering/wallMotion.ts`, `src/rendering/wallMotion.test.ts`, `src/components/GameScreen.tsx`
+  - 依存関係: 3
+  - 完了条件: 壁が設定された周期で連続的に拡大し、新しい壁では開始位置へ戻る。
+  - 完了条件: 論理進行率、判定タイミング、スコア、ミス数は既存規則を維持する。
+  - 確認方法: 補間関数のユニットテスト、型チェック、ビルド、全ユニットテストを実行する。
+  - _Requirements: 9.1-9.4_
+  - _Boundary: Rendering Motion, GameScreen_
+
+- [x] 8. 本人選択式アバターを追加する
+  - 作業内容: 準備画面へ男性風、女性風、ニュートラルの選択肢を追加し、選択した配色、服装、髪型をCanvasアバターへ反映する。
+  - 変更するファイル: `src/game/types.ts`, `src/game/state.ts`, `src/components/AvatarStyleSelector.tsx`, `src/App.tsx`, `src/components/GameScreen.tsx`, `src/rendering/canvasRenderer.ts`, `src/style.css`
+  - 依存関係: 7
+  - 完了条件: 初期値はニュートラルで、本人の選択だけを表示へ反映し、カメラ画像から属性を推定しない。
+  - 確認方法: 型チェック、ビルド、初期状態テストを実行する。
+  - _Requirements: 10.1-10.5_
+  - _Boundary: Game State, Screen Components, Canvas Renderer_
+
+- [x] 9. 壁を高速化して判定を緩和する
+  - 作業内容: 壁進行を残り時間時計から分離して2.4秒周期にし、安全領域の各辺へ`0.05`の許容幅を追加する。
+  - 変更するファイル: `src/game/gameLoop.ts`, `src/App.tsx`, `src/rendering/wallMotion.ts`, `src/game/collision.ts`, `src/game/collision.test.ts`
+  - 依存関係: 7
+  - 完了条件: 残り時間は実時間の秒単位を維持し、壁は2.4秒で判定位置へ到達する。
+  - 完了条件: 許容幅内は成功、許容幅外は失敗、未検出は判定不能になる。
+  - 確認方法: 壁進行、補間、衝突判定のユニットテスト、型チェック、ビルドを実行する。
+  - _Requirements: 9.5, 11.1-11.4_
+  - _Boundary: Game Loop, Rendering Motion, Collision Logic_
+
 ## Requirements Coverage
 
 | Requirement | Covered by Tasks |
@@ -89,3 +128,22 @@
 | 7.2 | 5 |
 | 7.3 | 5 |
 | 7.4 | 5 |
+| 8.1 | 6 |
+| 8.2 | 6 |
+| 8.3 | 6 |
+| 8.4 | 6 |
+| 8.5 | 6 |
+| 9.1 | 7 |
+| 9.2 | 7 |
+| 9.3 | 7 |
+| 9.4 | 7 |
+| 9.5 | 9 |
+| 10.1 | 8 |
+| 10.2 | 8 |
+| 10.3 | 8 |
+| 10.4 | 8 |
+| 10.5 | 8 |
+| 11.1 | 9 |
+| 11.2 | 9 |
+| 11.3 | 9 |
+| 11.4 | 9 |

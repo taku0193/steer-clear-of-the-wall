@@ -1,4 +1,5 @@
 import type {
+  AvatarStyle,
   MockPose,
   PoseInputMode,
   SafeArea,
@@ -19,6 +20,7 @@ import type { CanvasViewport } from "./canvasViewport";
 
 type CanvasRenderInput = {
   viewport: CanvasViewport;
+  avatarStyle: AvatarStyle;
   mockPose: MockPose;
   poseFrame: PoseFrame | null;
   poseInputMode: PoseInputMode;
@@ -32,6 +34,19 @@ type Rect = {
   y: number;
   width: number;
   height: number;
+};
+
+type AvatarPalette = {
+  jacketStart: string;
+  jacketMiddle: string;
+  jacketEnd: string;
+  leftSleeve: string;
+  rightSleeve: string;
+  leftLeg: string;
+  rightLeg: string;
+  hairStart: string;
+  hairEnd: string;
+  backDetail: string;
 };
 
 export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderInput) {
@@ -83,6 +98,7 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
         projectPoseLandmarks(input.poseFrame, width, height),
         width,
         height,
+        input.avatarStyle,
       );
     } else {
       drawPoseNotDetected(context, width, height);
@@ -102,6 +118,7 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
     createMockAvatarPose(mockPoseRect),
     width,
     height,
+    input.avatarStyle,
   );
 }
 
@@ -125,7 +142,7 @@ function getNestedRect(parent: Rect, area: SafeArea): Rect {
 
 function getWallRect(canvasWidth: number, canvasHeight: number, wallProgress: number): Rect {
   const progress = Math.max(0, Math.min(wallProgress, 1));
-  const scale = 0.42 + progress * 0.58;
+  const scale = 0.55 + progress * 0.45;
   const width = canvasWidth * scale;
   const height = canvasHeight * scale;
 
@@ -204,7 +221,9 @@ function drawAvatar(
   pose: AvatarPose,
   width: number,
   height: number,
+  avatarStyle: AvatarStyle,
 ) {
+  const palette = getAvatarPalette(avatarStyle);
   const avatarScale = getAvatarScale(pose, width, height);
   const outlineWidth = clamp(avatarScale * 0.08, 3, 9);
   const armWidth = clamp(avatarScale * 0.2, 10, 28);
@@ -219,37 +238,153 @@ function drawAvatar(
     [pose.leftHip, pose.leftKnee, pose.leftAnkle],
     legWidth,
     "#172554",
-    "#263b69",
+    palette.leftLeg,
   );
   drawJointedLimb(
     context,
     [pose.rightHip, pose.rightKnee, pose.rightAnkle],
     legWidth,
     "#172554",
-    "#314879",
+    palette.rightLeg,
   );
   drawJointedLimb(
     context,
     [pose.leftShoulder, pose.leftElbow, pose.leftWrist],
     armWidth,
     "#172554",
-    "#3b82f6",
+    palette.leftSleeve,
   );
   drawJointedLimb(
     context,
     [pose.rightShoulder, pose.rightElbow, pose.rightWrist],
     armWidth,
     "#172554",
-    "#60a5fa",
+    palette.rightSleeve,
   );
 
+  drawAvatarHairBack(
+    context,
+    pose,
+    avatarScale,
+    avatarStyle,
+    palette,
+  );
   drawAvatarNeck(context, pose, avatarScale, outlineWidth);
-  drawAvatarTorso(context, pose, avatarScale, outlineWidth);
+  drawAvatarTorso(
+    context,
+    pose,
+    avatarScale,
+    outlineWidth,
+    palette,
+  );
   drawAvatarHands(context, pose, avatarScale, outlineWidth);
   drawAvatarShoes(context, pose, avatarScale, outlineWidth);
-  drawAvatarHead(context, pose, avatarScale, outlineWidth);
+  drawAvatarHead(
+    context,
+    pose,
+    avatarScale,
+    outlineWidth,
+    avatarStyle,
+    palette,
+  );
 
   context.restore();
+}
+
+function getAvatarPalette(avatarStyle: AvatarStyle): AvatarPalette {
+  switch (avatarStyle) {
+    case "masculine":
+      return {
+        jacketStart: "#2563eb",
+        jacketMiddle: "#3b82f6",
+        jacketEnd: "#1d4ed8",
+        leftSleeve: "#3b82f6",
+        rightSleeve: "#60a5fa",
+        leftLeg: "#263b69",
+        rightLeg: "#314879",
+        hairStart: "#172033",
+        hairEnd: "#334155",
+        backDetail: "rgba(219, 234, 254, 0.72)",
+      };
+    case "feminine":
+      return {
+        jacketStart: "#a21caf",
+        jacketMiddle: "#d946ef",
+        jacketEnd: "#7e22ce",
+        leftSleeve: "#c026d3",
+        rightSleeve: "#e879f9",
+        leftLeg: "#4c1d5f",
+        rightLeg: "#63306f",
+        hairStart: "#3f2937",
+        hairEnd: "#713f12",
+        backDetail: "rgba(250, 232, 255, 0.78)",
+      };
+    case "neutral":
+      return {
+        jacketStart: "#0f766e",
+        jacketMiddle: "#14b8a6",
+        jacketEnd: "#115e59",
+        leftSleeve: "#0d9488",
+        rightSleeve: "#2dd4bf",
+        leftLeg: "#1f3b46",
+        rightLeg: "#294b55",
+        hairStart: "#1f2937",
+        hairEnd: "#475569",
+        backDetail: "rgba(204, 251, 241, 0.78)",
+      };
+  }
+}
+
+function drawAvatarHairBack(
+  context: CanvasRenderingContext2D,
+  pose: AvatarPose,
+  avatarScale: number,
+  avatarStyle: AvatarStyle,
+  palette: AvatarPalette,
+) {
+  const headCenter = getHeadCenter(pose, avatarScale);
+
+  if (!headCenter) {
+    return;
+  }
+
+  const headRadius = clamp(avatarScale * 0.27, 13, 48);
+
+  if (avatarStyle === "feminine") {
+    const gradient = context.createLinearGradient(
+      headCenter.x,
+      headCenter.y - headRadius,
+      headCenter.x,
+      headCenter.y + headRadius * 2,
+    );
+    gradient.addColorStop(0, palette.hairStart);
+    gradient.addColorStop(1, palette.hairEnd);
+    context.beginPath();
+    context.ellipse(
+      headCenter.x,
+      headCenter.y + headRadius * 0.72,
+      headRadius * 0.78,
+      headRadius * 1.48,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    context.fillStyle = gradient;
+    context.fill();
+    context.strokeStyle = "#172554";
+    context.lineWidth = clamp(avatarScale * 0.05, 2, 6);
+    context.stroke();
+    return;
+  }
+
+  if (avatarStyle === "neutral") {
+    drawCircle(
+      context,
+      headCenter,
+      headRadius * 1.2,
+      palette.jacketEnd,
+    );
+  }
 }
 
 function drawJointedLimb(
@@ -328,6 +463,7 @@ function drawAvatarTorso(
   pose: AvatarPose,
   avatarScale: number,
   outlineWidth: number,
+  palette: AvatarPalette,
 ) {
   const {
     leftShoulder,
@@ -351,9 +487,9 @@ function drawAvatarTorso(
     rightShoulder.x,
     hipCenter.y,
   );
-  gradient.addColorStop(0, "#2563eb");
-  gradient.addColorStop(0.52, "#3b82f6");
-  gradient.addColorStop(1, "#1d4ed8");
+  gradient.addColorStop(0, palette.jacketStart);
+  gradient.addColorStop(0.52, palette.jacketMiddle);
+  gradient.addColorStop(1, palette.jacketEnd);
 
   context.beginPath();
   context.moveTo(leftShoulder.x, leftShoulder.y);
@@ -382,6 +518,7 @@ function drawAvatarTorso(
     shoulderCenter,
     hipCenter,
     avatarScale,
+    palette.backDetail,
   );
 }
 
@@ -390,8 +527,9 @@ function drawBackDetails(
   shoulderCenter: CanvasPoint,
   hipCenter: CanvasPoint,
   avatarScale: number,
+  detailColor: string,
 ) {
-  context.strokeStyle = "rgba(219, 234, 254, 0.72)";
+  context.strokeStyle = detailColor;
   context.lineWidth = clamp(avatarScale * 0.035, 2, 5);
 
   context.beginPath();
@@ -485,6 +623,8 @@ function drawAvatarHead(
   pose: AvatarPose,
   avatarScale: number,
   outlineWidth: number,
+  avatarStyle: AvatarStyle,
+  palette: AvatarPalette,
 ) {
   const headCenter = getHeadCenter(pose, avatarScale);
 
@@ -518,15 +658,16 @@ function drawAvatarHead(
     headCenter.x + headRadius,
     headCenter.y + headRadius,
   );
-  hairGradient.addColorStop(0, "#172033");
-  hairGradient.addColorStop(1, "#334155");
+  hairGradient.addColorStop(0, palette.hairStart);
+  hairGradient.addColorStop(1, palette.hairEnd);
   context.fillStyle = hairGradient;
   context.beginPath();
   context.ellipse(
     headCenter.x,
-    headCenter.y - headRadius * 0.3,
+    headCenter.y -
+      headRadius * (avatarStyle === "masculine" ? 0.42 : 0.28),
     headRadius * 1.08,
-    headRadius * 0.92,
+    headRadius * (avatarStyle === "feminine" ? 1.08 : 0.82),
     0,
     0,
     Math.PI * 2,

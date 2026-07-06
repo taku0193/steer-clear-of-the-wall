@@ -1,17 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { startCamera, stopCamera } from "./camera/camera";
+import { AvatarStyleSelector } from "./components/AvatarStyleSelector";
 import { CameraPreview } from "./components/CameraPreview";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
-import { advanceWallProgress } from "./game/gameLoop";
+import {
+  advanceWallProgress,
+  GAME_TICK_INTERVAL_MS,
+  WALL_TICK_INTERVAL_MS,
+} from "./game/gameLoop";
 import {
   createGameState,
   createInitialGameState,
   createPlayerAreaFromPoseFrame,
+  fitPoseFrameToGame,
 } from "./game/state";
-import type { GameError } from "./game/types";
+import type { AvatarStyle, GameError } from "./game/types";
 import { getWallPatternById, WALL_PATTERNS } from "./game/wallPatterns";
 import {
   detectPose,
@@ -111,8 +117,9 @@ export function App() {
           return;
         }
 
-        const playerArea = createPlayerAreaFromPoseFrame(result.frame);
-        setPoseFrame(result.frame);
+        const gamePoseFrame = fitPoseFrameToGame(result.frame);
+        const playerArea = createPlayerAreaFromPoseFrame(gamePoseFrame);
+        setPoseFrame(gamePoseFrame);
         setGameState((currentState) => {
           if (!isPoseDetectionPhase(currentState.phase)) {
             return currentState;
@@ -122,7 +129,7 @@ export function App() {
             ...currentState,
             poseInputMode: "camera",
             poseDetectionStatus:
-              result.frame.detected && playerArea
+              gamePoseFrame.detected && playerArea
                 ? "detected"
                 : "notDetected",
             playerArea,
@@ -160,7 +167,7 @@ export function App() {
       }
 
       setCountdownValue((currentValue) => currentValue - 1);
-    }, 1000);
+    }, GAME_TICK_INTERVAL_MS);
 
     return () => window.clearTimeout(timerId);
   }, [countdownValue, gameState.phase]);
@@ -186,15 +193,29 @@ export function App() {
           };
         }
 
-        return advanceWallProgress({
+        return {
           ...currentState,
           remainingSeconds: nextRemainingSeconds,
-        }, WALL_PATTERNS);
+        };
       });
-    }, 1000);
+    }, GAME_TICK_INTERVAL_MS);
 
     return () => window.clearTimeout(timerId);
   }, [gameState.phase, gameState.remainingSeconds]);
+
+  useEffect(() => {
+    if (gameState.phase !== "playing") {
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      setGameState((currentState) =>
+        advanceWallProgress(currentState, WALL_PATTERNS),
+      );
+    }, WALL_TICK_INTERVAL_MS);
+
+    return () => window.clearInterval(timerId);
+  }, [gameState.phase]);
 
   function handleStartGame() {
     resetGameSession("preparing");
@@ -270,7 +291,19 @@ export function App() {
   }
 
   function handleUseMockPose() {
-    resetGameSession("countdown");
+    releaseMediaResources();
+    setCountdownValue(COUNTDOWN_START);
+    setGameState((currentState) => ({
+      ...createGameState("countdown"),
+      avatarStyle: currentState.avatarStyle,
+    }));
+  }
+
+  function handleAvatarStyleChange(avatarStyle: AvatarStyle) {
+    setGameState((currentState) => ({
+      ...currentState,
+      avatarStyle,
+    }));
   }
 
   function resetGameSession(phase: "title" | "preparing" | "countdown") {
@@ -361,6 +394,7 @@ export function App() {
           remainingSeconds={gameState.remainingSeconds}
           score={gameState.score}
           misses={gameState.misses}
+          avatarStyle={gameState.avatarStyle}
           lastJudgment={gameState.lastJudgment}
           mockPose={gameState.mockPose}
           poseFrame={poseFrame}
@@ -382,6 +416,10 @@ export function App() {
         <p className="summary">
           カメラ映像を確認してからゲームを開始します。音声は取得しません。
         </p>
+        <AvatarStyleSelector
+          value={gameState.avatarStyle}
+          onChange={handleAvatarStyleChange}
+        />
         {cameraStream ? (
           <>
             <CameraPreview

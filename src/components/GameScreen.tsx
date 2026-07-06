@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type {
+  AvatarStyle,
   JudgmentResult,
   MockPose,
   PoseDetectionStatus,
@@ -13,11 +14,13 @@ import {
   calculateCanvasViewport,
   type CanvasViewport,
 } from "../rendering/canvasViewport";
+import { advanceVisualWallProgress } from "../rendering/wallMotion";
 
 type GameScreenProps = {
   remainingSeconds: number;
   score: number;
   misses: number;
+  avatarStyle: AvatarStyle;
   lastJudgment: JudgmentResult | null;
   mockPose: MockPose;
   poseFrame: PoseFrame | null;
@@ -32,6 +35,7 @@ export function GameScreen({
   remainingSeconds,
   score,
   misses,
+  avatarStyle,
   lastJudgment,
   mockPose,
   poseFrame,
@@ -43,11 +47,48 @@ export function GameScreen({
 }: GameScreenProps) {
   const screenRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const logicalWallProgressRef = useRef(wallProgress);
+  const previousLogicalWallProgressRef = useRef(wallProgress);
   const [canvasViewport, setCanvasViewport] =
     useState<CanvasViewport | null>(null);
+  const [visualWallProgress, setVisualWallProgress] =
+    useState(wallProgress);
   const judgmentFeedback = getJudgmentFeedback(lastJudgment);
   const poseStatus = getPoseStatusLabel(poseDetectionStatus);
   const inputModeLabel = poseInputMode === "camera" ? "カメラ" : "モック";
+
+  useEffect(() => {
+    logicalWallProgressRef.current = wallProgress;
+  }, [wallProgress]);
+
+  useEffect(() => {
+    let animationFrameId = 0;
+    let previousFrameTime: number | null = null;
+
+    const animateWall = (timestampMs: number) => {
+      const elapsedMs =
+        previousFrameTime === null ? 0 : timestampMs - previousFrameTime;
+      const logicalProgress = logicalWallProgressRef.current;
+      const previousLogicalProgress =
+        previousLogicalWallProgressRef.current;
+
+      setVisualWallProgress((currentVisualProgress) =>
+        advanceVisualWallProgress({
+          currentVisualProgress,
+          previousLogicalProgress,
+          logicalProgress,
+          elapsedMs,
+        }),
+      );
+      previousLogicalWallProgressRef.current = logicalProgress;
+      previousFrameTime = timestampMs;
+      animationFrameId = window.requestAnimationFrame(animateWall);
+    };
+
+    animationFrameId = window.requestAnimationFrame(animateWall);
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, []);
 
   useEffect(() => {
     const screenElement = screenRef.current;
@@ -106,21 +147,23 @@ export function GameScreen({
 
     renderGameCanvas(canvasRef.current, {
       viewport: canvasViewport,
+      avatarStyle,
       mockPose,
       poseFrame,
       poseInputMode,
       playerArea,
       wallPattern: activeWallPattern,
-      wallProgress,
+      wallProgress: visualWallProgress,
     });
   }, [
     activeWallPattern,
+    avatarStyle,
     canvasViewport,
     mockPose,
     playerArea,
     poseFrame,
     poseInputMode,
-    wallProgress,
+    visualWallProgress,
   ]);
 
   return (

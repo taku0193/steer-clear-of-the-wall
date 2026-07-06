@@ -5,6 +5,8 @@ type CollisionInput = {
   wallPattern: WallPattern;
 };
 
+export const COLLISION_TOLERANCE = 0.05;
+
 export function judgeCollision({
   playerArea,
   wallPattern,
@@ -21,10 +23,10 @@ export function judgeCollision({
   const safeRight = wallPattern.safeArea.x + wallPattern.safeArea.width;
   const safeBottom = wallPattern.safeArea.y + wallPattern.safeArea.height;
   const isInsideSafeArea =
-    playerArea.x >= wallPattern.safeArea.x &&
-    playerArea.y >= wallPattern.safeArea.y &&
-    playerRight <= safeRight &&
-    playerBottom <= safeBottom;
+    playerArea.x >= wallPattern.safeArea.x - COLLISION_TOLERANCE &&
+    playerArea.y >= wallPattern.safeArea.y - COLLISION_TOLERANCE &&
+    playerRight <= safeRight + COLLISION_TOLERANCE &&
+    playerBottom <= safeBottom + COLLISION_TOLERANCE;
 
   if (isInsideSafeArea) {
     return {

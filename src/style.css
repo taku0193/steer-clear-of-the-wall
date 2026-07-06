@@ -82,20 +82,20 @@ select {
   left: calc(16px + env(safe-area-inset-left));
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  width: min(430px, calc(100vw - 32px));
-  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+  gap: 6px;
   pointer-events: none;
 }
 
 .hud-item {
   display: grid;
   min-width: 0;
-  min-height: 74px;
+  min-height: 60px;
   align-content: center;
   gap: 4px;
   border: 1px solid rgba(247, 247, 242, 0.16);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 8px 11px;
   background: rgba(8, 10, 11, 0.72);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
@@ -112,7 +112,7 @@ select {
 .hud-item strong {
   color: #ffffff;
   overflow: hidden;
-  font-size: clamp(1.55rem, 3vw, 2.5rem);
+  font-size: clamp(1.35rem, 2.6vw, 2rem);
   line-height: 1;
   text-overflow: ellipsis;
 }
@@ -187,6 +187,58 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.avatar-style-selector {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.avatar-style-selector legend {
+  padding: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.avatar-style-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avatar-style-option {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  border: 1px solid rgba(247, 247, 242, 0.22);
+  border-radius: 10px;
+  padding: 12px;
+  color: #f7f7f2;
+  background: rgba(8, 10, 11, 0.56);
+  text-align: left;
+  cursor: pointer;
+}
+
+.avatar-style-option[aria-pressed="true"] {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.16);
+  box-shadow: inset 0 0 0 1px #34d399;
+}
+
+.avatar-style-option:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.avatar-style-option span {
+  color: rgba(247, 247, 242, 0.68);
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 
 .secondary-action {
@@ -349,6 +401,10 @@ h1 {
 }
 
 @media (max-width: 640px) {
+  .avatar-style-options {
+    grid-template-columns: 1fr;
+  }
+
   .game-hud {
     top: calc(8px + env(safe-area-inset-top));
     right: calc(8px + env(safe-area-inset-right));

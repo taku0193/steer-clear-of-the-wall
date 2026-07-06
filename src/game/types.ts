@@ -52,6 +52,7 @@ export type MockPose = {
 };
 
 export type PoseInputMode = "mock" | "camera";
+export type AvatarStyle = "masculine" | "feminine" | "neutral";
 
 export type PoseDetectionStatus =
   | "mock"
@@ -83,6 +84,7 @@ export type GameState = {
   misses: number;
   lastJudgment: JudgmentResult | null;
   mockPose: MockPose;
+  avatarStyle: AvatarStyle;
   poseInputMode: PoseInputMode;
   poseDetectionStatus: PoseDetectionStatus;
   playerArea: SafeArea | null;
