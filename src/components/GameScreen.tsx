@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   JudgmentResult,
   MockPose,
@@ -9,6 +9,10 @@ import type {
 } from "../game/types";
 import type { PoseFrame } from "../pose/poseTypes";
 import { renderGameCanvas } from "../rendering/canvasRenderer";
+import {
+  calculateCanvasViewport,
+  type CanvasViewport,
+} from "../rendering/canvasViewport";
 
 type GameScreenProps = {
   remainingSeconds: number;
@@ -37,16 +41,71 @@ export function GameScreen({
   activeWallPattern,
   wallProgress,
 }: GameScreenProps) {
+  const screenRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const wallProgressPercent = Math.round(wallProgress * 100);
+  const [canvasViewport, setCanvasViewport] =
+    useState<CanvasViewport | null>(null);
   const judgmentFeedback = getJudgmentFeedback(lastJudgment);
+  const poseStatus = getPoseStatusLabel(poseDetectionStatus);
+  const inputModeLabel = poseInputMode === "camera" ? "カメラ" : "モック";
 
   useEffect(() => {
-    if (!canvasRef.current) {
+    const screenElement = screenRef.current;
+
+    if (!screenElement) {
+      return;
+    }
+
+    const updateViewport = (width: number, height: number) => {
+      const nextViewport = calculateCanvasViewport(
+        width,
+        height,
+        window.devicePixelRatio,
+      );
+
+      if (!nextViewport) {
+        return;
+      }
+
+      setCanvasViewport((currentViewport) =>
+        isSameViewport(currentViewport, nextViewport)
+          ? currentViewport
+          : nextViewport,
+      );
+    };
+
+    const measureScreen = () => {
+      const bounds = screenElement.getBoundingClientRect();
+      updateViewport(bounds.width, bounds.height);
+    };
+
+    measureScreen();
+    window.addEventListener("resize", measureScreen);
+
+    if (typeof ResizeObserver === "undefined") {
+      return () => window.removeEventListener("resize", measureScreen);
+    }
+
+    const resizeObserver = new ResizeObserver(([entry]) => {
+      if (entry) {
+        updateViewport(entry.contentRect.width, entry.contentRect.height);
+      }
+    });
+    resizeObserver.observe(screenElement);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", measureScreen);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canvasRef.current || !canvasViewport) {
       return;
     }
 
     renderGameCanvas(canvasRef.current, {
+      viewport: canvasViewport,
       mockPose,
       poseFrame,
       poseInputMode,
@@ -56,6 +115,7 @@ export function GameScreen({
     });
   }, [
     activeWallPattern,
+    canvasViewport,
     mockPose,
     playerArea,
     poseFrame,
@@ -64,7 +124,20 @@ export function GameScreen({
   ]);
 
   return (
-    <section className="game-screen" aria-labelledby="playing-title">
+    <section
+      ref={screenRef}
+      className="game-screen"
+      aria-labelledby="playing-title"
+    >
+      <h1 id="playing-title" className="visually-hidden">
+        プレイ中
+      </h1>
+      <canvas
+        ref={canvasRef}
+        className="game-canvas"
+        aria-label="プレイヤー姿勢と壁パターンのゲーム描画"
+      />
+
       <header className="game-hud" aria-label="プレイ状況">
         <div className="hud-item">
           <span>残り時間</span>
@@ -81,43 +154,34 @@ export function GameScreen({
         </div>
       </header>
 
-      <div className="playfield-placeholder">
-        <canvas
-          ref={canvasRef}
-          className="game-canvas"
-          width="720"
-          height="420"
-          aria-label="プレイヤー姿勢と壁パターンのゲーム描画"
-        />
-        <p className="eyebrow">Playing</p>
-        <h1 id="playing-title">プレイ中</h1>
-        <p className="summary">
-          壁が通過したとき、プレイヤー領域が安全領域内に収まっているか判定します。
-        </p>
-        <p
-          className={`judgment-feedback judgment-feedback-${judgmentFeedback.status}`}
-          aria-live="polite"
-        >
-          直前の判定: {judgmentFeedback.label}
-        </p>
-        <dl className="summary">
-          <dt>現在の壁</dt>
-          <dd>{activeWallPattern.name}</dd>
-          <dt>壁の進行</dt>
-          <dd>{wallProgressPercent}%</dd>
-          <dt>姿勢入力</dt>
-          <dd>{poseInputMode === "camera" ? "カメラ" : "モック"}</dd>
-          <dt>検出状態</dt>
-          <dd>{getPoseStatusLabel(poseDetectionStatus)}</dd>
-          <dt>判定領域</dt>
-          <dd>
-            {playerArea
-              ? `x: ${playerArea.x.toFixed(2)}, y: ${playerArea.y.toFixed(2)}, w: ${playerArea.width.toFixed(2)}, h: ${playerArea.height.toFixed(2)}`
-              : "未検出"}
-          </dd>
-        </dl>
-      </div>
+      <p
+        className={`pose-status pose-status-${poseDetectionStatus}`}
+        aria-live="polite"
+      >
+        {inputModeLabel} / {poseStatus}
+      </p>
+
+      <p
+        className={`judgment-feedback judgment-feedback-${judgmentFeedback.status}`}
+        aria-live="polite"
+      >
+        <span className="visually-hidden">直前の判定: </span>
+        {judgmentFeedback.label}
+      </p>
     </section>
+  );
+}
+
+function isSameViewport(
+  currentViewport: CanvasViewport | null,
+  nextViewport: CanvasViewport,
+): boolean {
+  return (
+    currentViewport?.cssWidth === nextViewport.cssWidth &&
+    currentViewport.cssHeight === nextViewport.cssHeight &&
+    currentViewport.pixelRatio === nextViewport.pixelRatio &&
+    currentViewport.bitmapWidth === nextViewport.bitmapWidth &&
+    currentViewport.bitmapHeight === nextViewport.bitmapHeight
   );
 }
 

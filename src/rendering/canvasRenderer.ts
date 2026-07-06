@@ -5,12 +5,20 @@ import type {
   WallPattern,
 } from "../game/types";
 import type {
-  NormalizedPoint,
   PoseFrame,
-  PoseLandmarkName,
 } from "../pose/poseTypes";
+import {
+  createMockAvatarPose,
+  getPointDistance,
+  getPointMidpoint,
+  projectPoseLandmarks,
+  type AvatarPose,
+  type CanvasPoint,
+} from "./avatarGeometry";
+import type { CanvasViewport } from "./canvasViewport";
 
 type CanvasRenderInput = {
+  viewport: CanvasViewport;
   mockPose: MockPose;
   poseFrame: PoseFrame | null;
   poseInputMode: PoseInputMode;
@@ -26,39 +34,36 @@ type Rect = {
   height: number;
 };
 
-const POSE_CONNECTIONS: readonly [
-  PoseLandmarkName,
-  PoseLandmarkName,
-][] = [
-  ["nose", "leftShoulder"],
-  ["nose", "rightShoulder"],
-  ["leftShoulder", "rightShoulder"],
-  ["leftShoulder", "leftElbow"],
-  ["leftElbow", "leftWrist"],
-  ["rightShoulder", "rightElbow"],
-  ["rightElbow", "rightWrist"],
-  ["leftShoulder", "leftHip"],
-  ["rightShoulder", "rightHip"],
-  ["leftHip", "rightHip"],
-  ["leftHip", "leftKnee"],
-  ["leftKnee", "leftAnkle"],
-  ["rightHip", "rightKnee"],
-  ["rightKnee", "rightAnkle"],
-];
-const MIN_DRAW_VISIBILITY = 0.4;
-
 export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderInput) {
+  const { viewport } = input;
+
+  if (canvas.width !== viewport.bitmapWidth) {
+    canvas.width = viewport.bitmapWidth;
+  }
+
+  if (canvas.height !== viewport.bitmapHeight) {
+    canvas.height = viewport.bitmapHeight;
+  }
+
   const context = canvas.getContext("2d");
 
   if (!context) {
     return;
   }
 
-  const width = canvas.width;
-  const height = canvas.height;
+  const width = viewport.cssWidth;
+  const height = viewport.cssHeight;
   const wallRect = getWallRect(width, height, input.wallProgress);
   const safeRect = getNestedRect(wallRect, input.wallPattern.safeArea);
 
+  context.setTransform(
+    viewport.pixelRatio,
+    0,
+    0,
+    viewport.pixelRatio,
+    0,
+    0,
+  );
   context.clearRect(0, 0, width, height);
   drawBackground(context, width, height);
   drawDepthGuide(context, width, height, input.wallProgress);
@@ -66,14 +71,19 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
 
   if (input.poseInputMode === "camera") {
     if (input.poseFrame?.detected) {
-      drawDetectedPose(context, width, height, input.poseFrame);
-
       if (input.playerArea) {
         drawPlayerArea(
           context,
           getCanvasRect(width, height, input.playerArea),
         );
       }
+
+      drawAvatar(
+        context,
+        projectPoseLandmarks(input.poseFrame, width, height),
+        width,
+        height,
+      );
     } else {
       drawPoseNotDetected(context, width, height);
     }
@@ -81,9 +91,17 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
     return;
   }
 
-  drawMockPose(
+  const mockPoseRect = getCanvasRect(
+    width,
+    height,
+    input.mockPose.bodyArea,
+  );
+  drawPlayerArea(context, mockPoseRect);
+  drawAvatar(
     context,
-    getCanvasRect(width, height, input.mockPose.bodyArea),
+    createMockAvatarPose(mockPoseRect),
+    width,
+    height,
   );
 }
 
@@ -181,74 +199,448 @@ function drawWall(context: CanvasRenderingContext2D, wallRect: Rect, safeRect: R
   context.strokeRect(safeRect.x, safeRect.y, safeRect.width, safeRect.height);
 }
 
-function drawMockPose(context: CanvasRenderingContext2D, poseRect: Rect) {
-  context.fillStyle = "rgba(96, 165, 250, 0.28)";
-  context.fillRect(poseRect.x, poseRect.y, poseRect.width, poseRect.height);
-
-  context.strokeStyle = "#93c5fd";
-  context.lineWidth = 4;
-  context.strokeRect(poseRect.x, poseRect.y, poseRect.width, poseRect.height);
-
-  const headRadius = Math.max(10, poseRect.width * 0.24);
-  context.beginPath();
-  context.arc(poseRect.x + poseRect.width / 2, poseRect.y - headRadius * 0.8, headRadius, 0, Math.PI * 2);
-  context.fillStyle = "rgba(147, 197, 253, 0.78)";
-  context.fill();
-}
-
-function drawDetectedPose(
+function drawAvatar(
   context: CanvasRenderingContext2D,
+  pose: AvatarPose,
   width: number,
   height: number,
-  poseFrame: PoseFrame,
 ) {
-  context.strokeStyle = "#93c5fd";
-  context.lineWidth = 6;
-  context.lineCap = "round";
+  const avatarScale = getAvatarScale(pose, width, height);
+  const outlineWidth = clamp(avatarScale * 0.08, 3, 9);
+  const armWidth = clamp(avatarScale * 0.2, 10, 28);
+  const legWidth = clamp(avatarScale * 0.24, 12, 34);
 
-  for (const [startName, endName] of POSE_CONNECTIONS) {
-    const start = getVisiblePoint(poseFrame, startName);
-    const end = getVisiblePoint(poseFrame, endName);
+  context.save();
+  context.lineCap = "round";
+  context.lineJoin = "round";
+
+  drawJointedLimb(
+    context,
+    [pose.leftHip, pose.leftKnee, pose.leftAnkle],
+    legWidth,
+    "#172554",
+    "#263b69",
+  );
+  drawJointedLimb(
+    context,
+    [pose.rightHip, pose.rightKnee, pose.rightAnkle],
+    legWidth,
+    "#172554",
+    "#314879",
+  );
+  drawJointedLimb(
+    context,
+    [pose.leftShoulder, pose.leftElbow, pose.leftWrist],
+    armWidth,
+    "#172554",
+    "#3b82f6",
+  );
+  drawJointedLimb(
+    context,
+    [pose.rightShoulder, pose.rightElbow, pose.rightWrist],
+    armWidth,
+    "#172554",
+    "#60a5fa",
+  );
+
+  drawAvatarNeck(context, pose, avatarScale, outlineWidth);
+  drawAvatarTorso(context, pose, avatarScale, outlineWidth);
+  drawAvatarHands(context, pose, avatarScale, outlineWidth);
+  drawAvatarShoes(context, pose, avatarScale, outlineWidth);
+  drawAvatarHead(context, pose, avatarScale, outlineWidth);
+
+  context.restore();
+}
+
+function drawJointedLimb(
+  context: CanvasRenderingContext2D,
+  points: readonly (CanvasPoint | undefined)[],
+  limbWidth: number,
+  outlineColor: string,
+  fillColor: string,
+) {
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const start = points[index];
+    const end = points[index + 1];
 
     if (!start || !end) {
       continue;
     }
 
-    context.beginPath();
-    context.moveTo((1 - start.x) * width, start.y * height);
-    context.lineTo((1 - end.x) * width, end.y * height);
-    context.stroke();
+    drawLine(context, start, end, limbWidth + 6, outlineColor);
+    drawLine(context, start, end, limbWidth, fillColor);
+  }
+}
+
+function drawLine(
+  context: CanvasRenderingContext2D,
+  start: CanvasPoint,
+  end: CanvasPoint,
+  lineWidth: number,
+  color: string,
+) {
+  context.beginPath();
+  context.moveTo(start.x, start.y);
+  context.lineTo(end.x, end.y);
+  context.strokeStyle = color;
+  context.lineWidth = lineWidth;
+  context.stroke();
+}
+
+function drawAvatarNeck(
+  context: CanvasRenderingContext2D,
+  pose: AvatarPose,
+  avatarScale: number,
+  outlineWidth: number,
+) {
+  const shoulderCenter = getPairMidpoint(
+    pose.leftShoulder,
+    pose.rightShoulder,
+  );
+  const headCenter = getHeadCenter(pose, avatarScale);
+
+  if (!shoulderCenter || !headCenter) {
+    return;
   }
 
-  context.fillStyle = "#dbeafe";
+  const neckEnd = {
+    x: shoulderCenter.x,
+    y: shoulderCenter.y + avatarScale * 0.03,
+  };
+  drawLine(
+    context,
+    headCenter,
+    neckEnd,
+    avatarScale * 0.2 + outlineWidth * 2,
+    "#172554",
+  );
+  drawLine(
+    context,
+    headCenter,
+    neckEnd,
+    avatarScale * 0.2,
+    "#d8a27d",
+  );
+}
 
-  for (const point of Object.values(poseFrame.landmarks)) {
-    if (!point || point.visibility < MIN_DRAW_VISIBILITY) {
+function drawAvatarTorso(
+  context: CanvasRenderingContext2D,
+  pose: AvatarPose,
+  avatarScale: number,
+  outlineWidth: number,
+) {
+  const {
+    leftShoulder,
+    rightShoulder,
+    leftHip,
+    rightHip,
+  } = pose;
+
+  if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
+    return;
+  }
+
+  const shoulderCenter = getPointMidpoint(
+    leftShoulder,
+    rightShoulder,
+  );
+  const hipCenter = getPointMidpoint(leftHip, rightHip);
+  const gradient = context.createLinearGradient(
+    leftShoulder.x,
+    shoulderCenter.y,
+    rightShoulder.x,
+    hipCenter.y,
+  );
+  gradient.addColorStop(0, "#2563eb");
+  gradient.addColorStop(0.52, "#3b82f6");
+  gradient.addColorStop(1, "#1d4ed8");
+
+  context.beginPath();
+  context.moveTo(leftShoulder.x, leftShoulder.y);
+  context.quadraticCurveTo(
+    shoulderCenter.x,
+    shoulderCenter.y - avatarScale * 0.06,
+    rightShoulder.x,
+    rightShoulder.y,
+  );
+  context.lineTo(rightHip.x, rightHip.y);
+  context.quadraticCurveTo(
+    hipCenter.x,
+    hipCenter.y + avatarScale * 0.05,
+    leftHip.x,
+    leftHip.y,
+  );
+  context.closePath();
+  context.fillStyle = gradient;
+  context.fill();
+  context.strokeStyle = "#172554";
+  context.lineWidth = outlineWidth;
+  context.stroke();
+
+  drawBackDetails(
+    context,
+    shoulderCenter,
+    hipCenter,
+    avatarScale,
+  );
+}
+
+function drawBackDetails(
+  context: CanvasRenderingContext2D,
+  shoulderCenter: CanvasPoint,
+  hipCenter: CanvasPoint,
+  avatarScale: number,
+) {
+  context.strokeStyle = "rgba(219, 234, 254, 0.72)";
+  context.lineWidth = clamp(avatarScale * 0.035, 2, 5);
+
+  context.beginPath();
+  context.moveTo(
+    shoulderCenter.x - avatarScale * 0.22,
+    shoulderCenter.y + avatarScale * 0.08,
+  );
+  context.lineTo(
+    shoulderCenter.x,
+    shoulderCenter.y + avatarScale * 0.22,
+  );
+  context.lineTo(
+    shoulderCenter.x + avatarScale * 0.22,
+    shoulderCenter.y + avatarScale * 0.08,
+  );
+  context.stroke();
+
+  context.beginPath();
+  context.moveTo(
+    shoulderCenter.x,
+    shoulderCenter.y + avatarScale * 0.22,
+  );
+  context.lineTo(hipCenter.x, hipCenter.y - avatarScale * 0.08);
+  context.stroke();
+}
+
+function drawAvatarHands(
+  context: CanvasRenderingContext2D,
+  pose: AvatarPose,
+  avatarScale: number,
+  outlineWidth: number,
+) {
+  const handRadius = clamp(avatarScale * 0.1, 6, 15);
+
+  for (const wrist of [pose.leftWrist, pose.rightWrist]) {
+    if (!wrist) {
+      continue;
+    }
+
+    drawCircle(
+      context,
+      wrist,
+      handRadius + outlineWidth,
+      "#172554",
+    );
+    drawCircle(context, wrist, handRadius, "#d8a27d");
+  }
+}
+
+function drawAvatarShoes(
+  context: CanvasRenderingContext2D,
+  pose: AvatarPose,
+  avatarScale: number,
+  outlineWidth: number,
+) {
+  for (const ankle of [pose.leftAnkle, pose.rightAnkle]) {
+    if (!ankle) {
       continue;
     }
 
     context.beginPath();
-    context.arc((1 - point.x) * width, point.y * height, 6, 0, Math.PI * 2);
+    context.ellipse(
+      ankle.x,
+      ankle.y + avatarScale * 0.04,
+      avatarScale * 0.16 + outlineWidth,
+      avatarScale * 0.1 + outlineWidth,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    context.fillStyle = "#172554";
+    context.fill();
+
+    context.beginPath();
+    context.ellipse(
+      ankle.x,
+      ankle.y + avatarScale * 0.04,
+      avatarScale * 0.16,
+      avatarScale * 0.1,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    context.fillStyle = "#e0f2fe";
     context.fill();
   }
 }
 
+function drawAvatarHead(
+  context: CanvasRenderingContext2D,
+  pose: AvatarPose,
+  avatarScale: number,
+  outlineWidth: number,
+) {
+  const headCenter = getHeadCenter(pose, avatarScale);
+
+  if (!headCenter) {
+    return;
+  }
+
+  const headRadius = clamp(avatarScale * 0.27, 13, 48);
+  drawCircle(
+    context,
+    headCenter,
+    headRadius + outlineWidth,
+    "#172554",
+  );
+  drawCircle(context, headCenter, headRadius, "#d8a27d");
+
+  context.save();
+  context.beginPath();
+  context.arc(
+    headCenter.x,
+    headCenter.y,
+    headRadius,
+    0,
+    Math.PI * 2,
+  );
+  context.clip();
+
+  const hairGradient = context.createLinearGradient(
+    headCenter.x - headRadius,
+    headCenter.y - headRadius,
+    headCenter.x + headRadius,
+    headCenter.y + headRadius,
+  );
+  hairGradient.addColorStop(0, "#172033");
+  hairGradient.addColorStop(1, "#334155");
+  context.fillStyle = hairGradient;
+  context.beginPath();
+  context.ellipse(
+    headCenter.x,
+    headCenter.y - headRadius * 0.3,
+    headRadius * 1.08,
+    headRadius * 0.92,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  context.fill();
+  context.restore();
+
+  context.strokeStyle = "rgba(148, 163, 184, 0.65)";
+  context.lineWidth = clamp(avatarScale * 0.025, 1.5, 4);
+  context.beginPath();
+  context.moveTo(
+    headCenter.x,
+    headCenter.y - headRadius * 0.94,
+  );
+  context.quadraticCurveTo(
+    headCenter.x - headRadius * 0.16,
+    headCenter.y - headRadius * 0.2,
+    headCenter.x,
+    headCenter.y + headRadius * 0.38,
+  );
+  context.stroke();
+}
+
+function drawCircle(
+  context: CanvasRenderingContext2D,
+  center: CanvasPoint,
+  radius: number,
+  color: string,
+) {
+  context.beginPath();
+  context.arc(center.x, center.y, radius, 0, Math.PI * 2);
+  context.fillStyle = color;
+  context.fill();
+}
+
+function getAvatarScale(
+  pose: AvatarPose,
+  width: number,
+  height: number,
+): number {
+  const shoulderSpan = getPairDistance(
+    pose.leftShoulder,
+    pose.rightShoulder,
+  );
+  const hipSpan = getPairDistance(pose.leftHip, pose.rightHip);
+  const measuredScale = shoulderSpan ?? hipSpan ?? Math.min(width, height) * 0.12;
+
+  return clamp(
+    measuredScale,
+    48,
+    Math.max(48, Math.min(width, height) * 0.22),
+  );
+}
+
+function getHeadCenter(
+  pose: AvatarPose,
+  avatarScale: number,
+): CanvasPoint | null {
+  if (pose.nose) {
+    return pose.nose;
+  }
+
+  const shoulderCenter = getPairMidpoint(
+    pose.leftShoulder,
+    pose.rightShoulder,
+  );
+
+  if (!shoulderCenter) {
+    return null;
+  }
+
+  return {
+    x: shoulderCenter.x,
+    y: shoulderCenter.y - avatarScale * 0.48,
+  };
+}
+
+function getPairDistance(
+  first: CanvasPoint | undefined,
+  second: CanvasPoint | undefined,
+): number | null {
+  return first && second ? getPointDistance(first, second) : null;
+}
+
+function getPairMidpoint(
+  first: CanvasPoint | undefined,
+  second: CanvasPoint | undefined,
+): CanvasPoint | null {
+  return first && second ? getPointMidpoint(first, second) : null;
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(Math.max(value, minimum), maximum);
+}
+
 function drawPlayerArea(context: CanvasRenderingContext2D, playerRect: Rect) {
-  context.fillStyle = "rgba(96, 165, 250, 0.12)";
+  context.save();
+  context.fillStyle = "rgba(96, 165, 250, 0.08)";
   context.fillRect(
     playerRect.x,
     playerRect.y,
     playerRect.width,
     playerRect.height,
   );
-  context.strokeStyle = "rgba(147, 197, 253, 0.72)";
+  context.strokeStyle = "rgba(147, 197, 253, 0.48)";
   context.lineWidth = 2;
+  context.setLineDash([8, 8]);
   context.strokeRect(
     playerRect.x,
     playerRect.y,
     playerRect.width,
     playerRect.height,
   );
+  context.restore();
 }
 
 function drawPoseNotDetected(
@@ -264,17 +656,4 @@ function drawPoseNotDetected(
     width / 2,
     height / 2,
   );
-}
-
-function getVisiblePoint(
-  poseFrame: PoseFrame,
-  name: PoseLandmarkName,
-): NormalizedPoint | null {
-  const point = poseFrame.landmarks[name];
-
-  if (!point || point.visibility < MIN_DRAW_VISIBILITY) {
-    return null;
-  }
-
-  return point;
 }

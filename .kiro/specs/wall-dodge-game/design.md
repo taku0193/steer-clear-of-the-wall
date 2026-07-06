@@ -241,11 +241,16 @@ type PoseFrame = {
 
 ### Design
 
-- アバターは `PoseFrame` のランドマークを使って簡単な棒人間または抽象的な身体線として描画する。
+- アバターは `PoseFrame` のランドマークを使い、頭、胴体、腕、脚を面と太さのある
+  シルエットとして描画する。ランドマーク点や骨格線は通常表示しない。
+- アバターは迫ってくる壁を見ている後ろ姿とし、顔を描かず、後頭部、背面の衣服、
+  背中のラインによって向きを伝える。
+- モック姿勢も実カメラ姿勢と同じ配色と後ろ姿の身体表現を使用する。
 - カメラ映像そのものを主表示にしない。
 - 検出中はランドマーク位置に合わせて更新する。
 - 検出不能時は、アバターを薄くする、または「姿勢を検出できません」と表示する。
-- 初期実装では見た目の凝ったキャラクターではなく、判定対象が分かる簡潔な表現にする。
+- 画像素材や3Dモデルは追加せず、Canvas 2Dの図形で描画する。
+- 判定領域はアバターより背面へ薄く描画し、キャラクターの視認性を妨げない。
 
 ### Rendering Contract
 
@@ -556,6 +561,7 @@ interface ScoringService {
 | 3.2 | 動きに合わせて更新 | Pose Adapter, Canvas Renderer | PoseFrame | データの流れ |
 | 3.3 | 姿勢未検出状態を表示 | Pose Adapter, GameScreen | PoseFrame | エラー処理 |
 | 3.4 | カメラ映像でなくアバター主表示 | Canvas Renderer, GameScreen | RenderFrameInput | 画面構成 |
+| 3.5 | 壁を向いた後ろ姿アバター | Canvas Renderer | PoseFrame, RenderFrameInput | アバター表示の設計 |
 | 4.1 | 準備完了後カウントダウン | Game State | GamePhase | 状態遷移 |
 | 4.2 | カウントダウン中は判定しない | Game State, Collision Logic | GamePhase | 状態遷移 |
 | 4.3 | カウントダウン後プレイへ | Game State | GamePhase | 状態遷移 |

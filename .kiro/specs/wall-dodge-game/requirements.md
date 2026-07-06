@@ -103,6 +103,7 @@
 2. While プレイヤーの姿勢が検出されている, the Wall Dodge Game shall アバター表示をプレイヤーの動きに合わせて更新する
 3. If プレイヤーの姿勢が一時的に検出できない, the Wall Dodge Game shall 姿勢が検出できない状態をプレイヤーに示す
 4. The Wall Dodge Game shall カメラ映像そのものではなく、ゲーム内表現としてのアバターを主表示にする
+5. While プレイ中である, the Wall Dodge Game shall アバターを迫ってくる壁の方向へ向いた後ろ姿として表示する
 
 ### Requirement 4: カウントダウンとゲーム開始
 
