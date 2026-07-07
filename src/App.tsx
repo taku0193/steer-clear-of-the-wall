@@ -177,37 +177,6 @@ export function App() {
       return;
     }
 
-    const timerId = window.setTimeout(() => {
-      setGameState((currentState) => {
-        if (currentState.phase !== "playing") {
-          return currentState;
-        }
-
-        const nextRemainingSeconds = Math.max(currentState.remainingSeconds - 1, 0);
-
-        if (nextRemainingSeconds === 0) {
-          return {
-            ...currentState,
-            phase: "result",
-            remainingSeconds: 0,
-          };
-        }
-
-        return {
-          ...currentState,
-          remainingSeconds: nextRemainingSeconds,
-        };
-      });
-    }, GAME_TICK_INTERVAL_MS);
-
-    return () => window.clearTimeout(timerId);
-  }, [gameState.phase, gameState.remainingSeconds]);
-
-  useEffect(() => {
-    if (gameState.phase !== "playing") {
-      return;
-    }
-
     const timerId = window.setInterval(() => {
       setGameState((currentState) =>
         advanceWallProgress(currentState, WALL_PATTERNS),
@@ -336,6 +305,7 @@ export function App() {
         <ResultScreen
           finalScore={gameState.score}
           misses={gameState.misses}
+          remainingHearts={gameState.remainingHearts}
           onRestart={handleReplayGame}
         />
       </main>
@@ -391,7 +361,7 @@ export function App() {
           />
         )}
         <GameScreen
-          remainingSeconds={gameState.remainingSeconds}
+          remainingHearts={gameState.remainingHearts}
           score={gameState.score}
           misses={gameState.misses}
           avatarStyle={gameState.avatarStyle}

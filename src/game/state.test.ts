@@ -6,7 +6,7 @@ import {
   createPlayerAreaFromPoseFrame,
   fitPoseFrameToGame,
   GAME_POSE_SCALE,
-  GAME_DURATION_SECONDS,
+  MAX_HEARTS,
   MAX_GAME_POSE_HEIGHT,
   MAX_GAME_POSE_WIDTH,
 } from "./state";
@@ -19,7 +19,7 @@ describe("ゲーム状態の初期化", () => {
     expect(state).toMatchObject({
       phase: "title",
       error: null,
-      remainingSeconds: GAME_DURATION_SECONDS,
+      remainingHearts: MAX_HEARTS,
       score: 0,
       misses: 0,
       lastJudgment: null,
@@ -37,7 +37,7 @@ describe("ゲーム状態の初期化", () => {
     const state = createGameState("playing");
 
     expect(state.phase).toBe("playing");
-    expect(state.remainingSeconds).toBe(GAME_DURATION_SECONDS);
+    expect(state.remainingHearts).toBe(MAX_HEARTS);
     expect(state.score).toBe(0);
     expect(state.misses).toBe(0);
     expect(state.lastJudgment).toBeNull();

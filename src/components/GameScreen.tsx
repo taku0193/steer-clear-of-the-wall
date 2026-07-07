@@ -17,7 +17,7 @@ import {
 import { advanceVisualWallProgress } from "../rendering/wallMotion";
 
 type GameScreenProps = {
-  remainingSeconds: number;
+  remainingHearts: number;
   score: number;
   misses: number;
   avatarStyle: AvatarStyle;
@@ -32,7 +32,7 @@ type GameScreenProps = {
 };
 
 export function GameScreen({
-  remainingSeconds,
+  remainingHearts,
   score,
   misses,
   avatarStyle,
@@ -56,6 +56,7 @@ export function GameScreen({
   const judgmentFeedback = getJudgmentFeedback(lastJudgment);
   const poseStatus = getPoseStatusLabel(poseDetectionStatus);
   const inputModeLabel = poseInputMode === "camera" ? "カメラ" : "モック";
+  const heartDisplay = getHeartDisplay(remainingHearts);
 
   useEffect(() => {
     logicalWallProgressRef.current = wallProgress;
@@ -183,9 +184,13 @@ export function GameScreen({
 
       <header className="game-hud" aria-label="プレイ状況">
         <div className="hud-item">
-          <span>残り時間</span>
-          <strong>{remainingSeconds}</strong>
-          <small>秒</small>
+          <span>ハート</span>
+          <strong
+            className="heart-readout"
+            aria-label={`残りハート${remainingHearts}個`}
+          >
+            {heartDisplay}
+          </strong>
         </div>
         <div className="hud-item">
           <span>スコア</span>
@@ -241,6 +246,12 @@ function getPoseStatusLabel(status: PoseDetectionStatus): string {
     case "notDetected":
       return "全身を検出できません";
   }
+}
+
+function getHeartDisplay(remainingHearts: number): string {
+  const heartCount = Math.min(Math.max(Math.trunc(remainingHearts), 0), 5);
+
+  return "♥".repeat(heartCount) + "♡".repeat(5 - heartCount);
 }
 
 type JudgmentFeedback = {

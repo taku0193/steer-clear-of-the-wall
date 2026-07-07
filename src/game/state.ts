@@ -4,7 +4,7 @@ import { DEFAULT_MOCK_POSE } from "./mockPose";
 import { getWallPatternByIndex } from "./wallPatterns";
 
 export const INITIAL_GAME_PHASE: GamePhase = "title";
-export const GAME_DURATION_SECONDS = 20;
+export const MAX_HEARTS = 5;
 export const INITIAL_SCORE = 0;
 export const INITIAL_MISSES = 0;
 export const INITIAL_WALL_SEQUENCE_INDEX = 0;
@@ -43,7 +43,7 @@ export function createGameState(phase: GamePhase): GameState {
   return {
     phase,
     error: null,
-    remainingSeconds: GAME_DURATION_SECONDS,
+    remainingHearts: MAX_HEARTS,
     score: INITIAL_SCORE,
     misses: INITIAL_MISSES,
     lastJudgment: null,

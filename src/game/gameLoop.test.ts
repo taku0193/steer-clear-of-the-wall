@@ -4,7 +4,7 @@ import {
   WALL_PROGRESS_PASSED,
   WALL_PROGRESS_STEP,
 } from "./gameLoop";
-import { createGameState } from "./state";
+import { createGameState, MAX_HEARTS } from "./state";
 import { WALL_PATTERNS } from "./wallPatterns";
 
 describe("advanceWallProgress", () => {
@@ -66,7 +66,31 @@ describe("advanceWallProgress", () => {
 
     expect(result.lastJudgment?.type).toBe("miss");
     expect(result.misses).toBe(1);
+    expect(result.remainingHearts).toBe(MAX_HEARTS - 1);
     expect(result.score).toBe(0);
+  });
+
+  it("ハートがなくなったら結果状態へ遷移する", () => {
+    const state = {
+      ...createGameState("playing"),
+      poseInputMode: "camera" as const,
+      playerArea: {
+        x: 0,
+        y: 0,
+        width: 0.2,
+        height: 0.2,
+      },
+      misses: MAX_HEARTS - 1,
+      remainingHearts: 1,
+      wallProgress: WALL_PROGRESS_PASSED - WALL_PROGRESS_STEP,
+    };
+
+    const result = advanceWallProgress(state, WALL_PATTERNS);
+
+    expect(result.phase).toBe("result");
+    expect(result.lastJudgment?.type).toBe("miss");
+    expect(result.misses).toBe(MAX_HEARTS);
+    expect(result.remainingHearts).toBe(0);
   });
 
   it("実姿勢が未検出の場合はスコアとミスを変更しない", () => {
@@ -81,6 +105,7 @@ describe("advanceWallProgress", () => {
 
     expect(result.lastJudgment?.type).toBe("notDetected");
     expect(result.misses).toBe(0);
+    expect(result.remainingHearts).toBe(MAX_HEARTS);
     expect(result.score).toBe(0);
   });
 

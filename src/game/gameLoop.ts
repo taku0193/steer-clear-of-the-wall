@@ -36,17 +36,24 @@ export function advanceWallProgress(
         : gameState.mockPose.bodyArea,
     wallPattern: activeWallPattern,
   });
+  const nextMisses = gameState.misses + (judgment.type === "miss" ? 1 : 0);
+  const nextRemainingHearts =
+    judgment.type === "miss"
+      ? Math.max(gameState.remainingHearts - 1, 0)
+      : gameState.remainingHearts;
   const nextWallSequenceIndex = (gameState.wallSequenceIndex + 1) % wallPatterns.length;
   const nextWallPattern = wallPatterns[nextWallSequenceIndex];
 
   return {
     ...gameState,
+    phase: nextRemainingHearts === 0 ? "result" : gameState.phase,
     score: calculateScore({
       currentScore: gameState.score,
       judgment,
       wallPattern: activeWallPattern,
     }),
-    misses: gameState.misses + (judgment.type === "miss" ? 1 : 0),
+    misses: nextMisses,
+    remainingHearts: nextRemainingHearts,
     lastJudgment: judgment,
     activeWallPatternId: nextWallPattern.id,
     wallProgress: 0,

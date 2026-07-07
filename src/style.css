@@ -117,6 +117,13 @@ select {
   text-overflow: ellipsis;
 }
 
+.hud-item .heart-readout {
+  color: #fda4af;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 .game-canvas {
   position: absolute;
   z-index: 0;
@@ -386,7 +393,7 @@ h1 {
 
 .result-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 

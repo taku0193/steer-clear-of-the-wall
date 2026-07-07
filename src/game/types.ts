@@ -82,7 +82,7 @@ export type JudgmentResult =
 export type GameState = {
   phase: GamePhase;
   error: GameError | null;
-  remainingSeconds: number;
+  remainingHearts: number;
   score: number;
   misses: number;
   lastJudgment: JudgmentResult | null;
