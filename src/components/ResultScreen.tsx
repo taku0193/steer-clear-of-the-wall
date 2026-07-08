@@ -1,14 +1,18 @@
 type ResultScreenProps = {
   finalScore: number;
   misses: number;
-  remainingHearts: number;
+  successfulWalls: number;
+  wallSpeedLevel: number;
+  wallSpeedLabel: string;
   onRestart: () => void;
 };
 
 export function ResultScreen({
   finalScore,
   misses,
-  remainingHearts,
+  successfulWalls,
+  wallSpeedLevel,
+  wallSpeedLabel,
   onRestart,
 }: ResultScreenProps) {
   return (
@@ -22,8 +26,14 @@ export function ResultScreen({
           <strong>{finalScore}</strong>
         </p>
         <p className="score-readout">
-          <span>残りハート</span>
-          <strong>{remainingHearts}</strong>
+          <span>クリア枚数</span>
+          <strong>{successfulWalls}</strong>
+        </p>
+        <p className="score-readout">
+          <span>最高速度</span>
+          <strong aria-label={`最高速度レベル${wallSpeedLevel}、${wallSpeedLabel}`}>
+            Lv.{wallSpeedLevel}
+          </strong>
         </p>
         <p className="score-readout">
           <span>ミス数</span>

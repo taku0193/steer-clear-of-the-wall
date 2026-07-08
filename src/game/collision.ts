@@ -1,4 +1,5 @@
 import type { JudgmentResult, SafeArea, WallPattern } from "./types";
+import { arePlayerAnchorsInsideSafeShape } from "./safeShape";
 
 type CollisionInput = {
   playerArea: SafeArea | null;
@@ -18,15 +19,13 @@ export function judgeCollision({
     };
   }
 
-  const playerRight = playerArea.x + playerArea.width;
-  const playerBottom = playerArea.y + playerArea.height;
-  const safeRight = wallPattern.safeArea.x + wallPattern.safeArea.width;
-  const safeBottom = wallPattern.safeArea.y + wallPattern.safeArea.height;
-  const isInsideSafeArea =
-    playerArea.x >= wallPattern.safeArea.x - COLLISION_TOLERANCE &&
-    playerArea.y >= wallPattern.safeArea.y - COLLISION_TOLERANCE &&
-    playerRight <= safeRight + COLLISION_TOLERANCE &&
-    playerBottom <= safeBottom + COLLISION_TOLERANCE;
+  const isInsideSafeArea = wallPattern.safeShape
+    ? arePlayerAnchorsInsideSafeShape({
+        playerArea,
+        safeShape: wallPattern.safeShape,
+        tolerance: COLLISION_TOLERANCE,
+      })
+    : isPlayerAreaInsideSafeArea(playerArea, wallPattern.safeArea);
 
   if (isInsideSafeArea) {
     return {
@@ -40,4 +39,21 @@ export function judgeCollision({
     patternId: wallPattern.id,
     reason: "outsideSafeArea",
   };
+}
+
+function isPlayerAreaInsideSafeArea(
+  playerArea: SafeArea,
+  safeArea: SafeArea,
+): boolean {
+  const playerRight = playerArea.x + playerArea.width;
+  const playerBottom = playerArea.y + playerArea.height;
+  const safeRight = safeArea.x + safeArea.width;
+  const safeBottom = safeArea.y + safeArea.height;
+
+  return (
+    playerArea.x >= safeArea.x - COLLISION_TOLERANCE &&
+    playerArea.y >= safeArea.y - COLLISION_TOLERANCE &&
+    playerRight <= safeRight + COLLISION_TOLERANCE &&
+    playerBottom <= safeBottom + COLLISION_TOLERANCE
+  );
 }

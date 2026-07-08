@@ -1,4 +1,4 @@
-import type { WallPattern } from "./types";
+import type { SafeShape, WallPattern } from "./types";
 
 export const WALL_PATTERNS: readonly WallPattern[] = [
   {
@@ -11,6 +11,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.28,
       height: 0.82,
     },
+    safeShape: createStandingShape(0.5),
     scoreValue: 100,
   },
   {
@@ -23,6 +24,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.28,
       height: 0.8,
     },
+    safeShape: createStandingShape(0.26),
     scoreValue: 100,
   },
   {
@@ -35,6 +37,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.28,
       height: 0.8,
     },
+    safeShape: createStandingShape(0.74),
     scoreValue: 100,
   },
   {
@@ -47,6 +50,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.32,
       height: 0.55,
     },
+    safeShape: createCrouchShape(0.5),
     scoreValue: 120,
   },
   {
@@ -59,6 +63,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.28,
       height: 0.45,
     },
+    safeShape: createDeepCrouchShape(0.5),
     scoreValue: 160,
   },
   {
@@ -71,6 +76,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.32,
       height: 0.56,
     },
+    safeShape: createCrouchShape(0.3),
     scoreValue: 140,
   },
   {
@@ -83,6 +89,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.32,
       height: 0.56,
     },
+    safeShape: createCrouchShape(0.7),
     scoreValue: 140,
   },
   {
@@ -95,6 +102,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.2,
       height: 0.8,
     },
+    safeShape: createNarrowStandingShape(0.5),
     scoreValue: 150,
   },
   {
@@ -107,6 +115,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.56,
       height: 0.58,
     },
+    safeShape: createWideLowShape(),
     scoreValue: 120,
   },
   {
@@ -119,6 +128,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.32,
       height: 0.54,
     },
+    safeShape: createStandingShape(0.5, 0.05),
     scoreValue: 80,
   },
   {
@@ -131,6 +141,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.34,
       height: 0.53,
     },
+    safeShape: createStandingShape(0.5, 0.02),
     scoreValue: 100,
   },
   {
@@ -143,6 +154,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.34,
       height: 0.55,
     },
+    safeShape: createStandingShape(0.32, 0.02),
     scoreValue: 130,
   },
   {
@@ -155,6 +167,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.34,
       height: 0.55,
     },
+    safeShape: createStandingShape(0.68, 0.02),
     scoreValue: 130,
   },
   {
@@ -167,6 +180,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.22,
       height: 0.5,
     },
+    safeShape: createNarrowStandingShape(0.5, -0.1),
     scoreValue: 180,
   },
   {
@@ -239,6 +253,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.4,
       height: 0.36,
     },
+    safeShape: createDeepCrouchShape(0.5, 0.04),
     scoreValue: 220,
   },
   {
@@ -251,6 +266,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.24,
       height: 0.74,
     },
+    safeShape: createStandingShape(0.16, 0.02),
     scoreValue: 170,
   },
   {
@@ -263,6 +279,7 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
       width: 0.24,
       height: 0.74,
     },
+    safeShape: createStandingShape(0.84, 0.02),
     scoreValue: 170,
   },
   {
@@ -278,6 +295,137 @@ export const WALL_PATTERNS: readonly WallPattern[] = [
     scoreValue: 260,
   },
 ];
+
+function createStandingShape(centerX: number, yOffset = 0): SafeShape {
+  return {
+    zones: [
+      {
+        type: "polygon",
+        id: "standing-silhouette",
+        points: createSymmetricPoints(centerX, [
+          [0, 0.13 + yOffset],
+          [0.1, 0.17 + yOffset],
+          [0.13, 0.28 + yOffset],
+          [0.09, 0.36 + yOffset],
+          [0.16, 0.45 + yOffset],
+          [0.15, 0.58 + yOffset],
+          [0.09, 0.65 + yOffset],
+          [0.1, 0.96],
+          [0.03, 0.98],
+          [0, 0.72 + yOffset],
+        ]),
+      },
+    ],
+  };
+}
+
+function createNarrowStandingShape(centerX: number, yOffset = 0): SafeShape {
+  return {
+    zones: [
+      {
+        type: "polygon",
+        id: "narrow-silhouette",
+        points: createSymmetricPoints(centerX, [
+          [0, 0.12 + yOffset],
+          [0.07, 0.16 + yOffset],
+          [0.09, 0.26 + yOffset],
+          [0.06, 0.34 + yOffset],
+          [0.1, 0.48 + yOffset],
+          [0.08, 0.7],
+          [0.07, 0.98],
+          [0.02, 0.99],
+          [0, 0.72],
+        ]),
+      },
+    ],
+  };
+}
+
+function createCrouchShape(centerX: number): SafeShape {
+  return {
+    zones: [
+      {
+        type: "polygon",
+        id: "crouch-silhouette",
+        points: createSymmetricPoints(centerX, [
+          [0, 0.42],
+          [0.12, 0.46],
+          [0.15, 0.56],
+          [0.25, 0.62],
+          [0.28, 0.75],
+          [0.21, 0.9],
+          [0.11, 0.98],
+          [0, 0.92],
+        ]),
+      },
+    ],
+  };
+}
+
+function createDeepCrouchShape(centerX: number, yOffset = 0): SafeShape {
+  return {
+    zones: [
+      {
+        type: "polygon",
+        id: "deep-crouch-silhouette",
+        points: createSymmetricPoints(centerX, [
+          [0, 0.52 + yOffset],
+          [0.1, 0.55 + yOffset],
+          [0.13, 0.65 + yOffset],
+          [0.2, 0.72 + yOffset],
+          [0.22, 0.86],
+          [0.15, 0.98],
+          [0, 0.95],
+        ]),
+      },
+    ],
+  };
+}
+
+function createWideLowShape(): SafeShape {
+  return {
+    zones: [
+      {
+        type: "polygon",
+        id: "wide-low-silhouette",
+        points: createSymmetricPoints(0.5, [
+          [0, 0.4],
+          [0.12, 0.44],
+          [0.15, 0.55],
+          [0.31, 0.52],
+          [0.33, 0.65],
+          [0.25, 0.78],
+          [0.23, 0.98],
+          [0.06, 0.94],
+          [0, 0.82],
+        ]),
+      },
+    ],
+  };
+}
+
+function createSymmetricPoints(
+  centerX: number,
+  rightSidePoints: readonly [number, number][],
+): readonly { x: number; y: number }[] {
+  const rightSide = rightSidePoints.map(([offsetX, y]) => ({
+    x: clampNormalized(centerX + offsetX),
+    y: clampNormalized(y),
+  }));
+  const leftSide = rightSidePoints
+    .slice(1)
+    .reverse()
+    .map(([offsetX, y]) => ({
+      x: clampNormalized(centerX - offsetX),
+      y: clampNormalized(y),
+    }));
+
+  return [...rightSide, ...leftSide];
+}
+
+function clampNormalized(value: number): number {
+  return Math.min(Math.max(value, 0), 1);
+}
 
 export function getWallPatternById(patternId: string): WallPattern {
   return WALL_PATTERNS.find((wallPattern) => wallPattern.id === patternId) ?? WALL_PATTERNS[0];

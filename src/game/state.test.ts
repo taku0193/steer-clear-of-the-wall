@@ -29,6 +29,9 @@ describe("ゲーム状態の初期化", () => {
       activeWallPatternId: WALL_PATTERNS[0].id,
       wallProgress: 0,
       wallSequenceIndex: 0,
+      successfulWalls: 0,
+      wallSpeedLevel: 1,
+      lastSpeedLevelUp: false,
     });
     expect(state.playerArea).toEqual(state.mockPose.bodyArea);
   });
@@ -41,6 +44,9 @@ describe("ゲーム状態の初期化", () => {
     expect(state.score).toBe(0);
     expect(state.misses).toBe(0);
     expect(state.lastJudgment).toBeNull();
+    expect(state.successfulWalls).toBe(0);
+    expect(state.wallSpeedLevel).toBe(1);
+    expect(state.lastSpeedLevelUp).toBe(false);
   });
 });
 

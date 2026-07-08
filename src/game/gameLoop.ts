@@ -1,8 +1,13 @@
 import type { GameState, WallPattern } from "./types";
 import { judgeCollision } from "./collision";
 import { calculateScore } from "./scoring";
+import {
+  calculateNextSpeedState,
+  getWallProgressStep,
+  INITIAL_WALL_PROGRESS_STEP,
+} from "./wallSpeed";
 
-export const WALL_PROGRESS_STEP = 0.25;
+export const WALL_PROGRESS_STEP = INITIAL_WALL_PROGRESS_STEP;
 export const WALL_PROGRESS_PASSED = 1;
 export const GAME_TICK_INTERVAL_MS = 1000;
 export const WALL_TICK_INTERVAL_MS = 600;
@@ -17,7 +22,8 @@ export function advanceWallProgress(
     return gameState;
   }
 
-  const nextProgress = gameState.wallProgress + WALL_PROGRESS_STEP;
+  const progressStep = getWallProgressStep(gameState.wallSpeedLevel);
+  const nextProgress = gameState.wallProgress + progressStep;
 
   if (nextProgress < WALL_PROGRESS_PASSED) {
     return {
@@ -43,6 +49,11 @@ export function advanceWallProgress(
       : gameState.remainingHearts;
   const nextWallSequenceIndex = (gameState.wallSequenceIndex + 1) % wallPatterns.length;
   const nextWallPattern = wallPatterns[nextWallSequenceIndex];
+  const nextSpeedState = calculateNextSpeedState({
+    successfulWalls: gameState.successfulWalls,
+    currentSpeedLevel: gameState.wallSpeedLevel,
+    judgmentType: judgment.type,
+  });
 
   return {
     ...gameState,
@@ -58,5 +69,8 @@ export function advanceWallProgress(
     activeWallPatternId: nextWallPattern.id,
     wallProgress: 0,
     wallSequenceIndex: nextWallSequenceIndex,
+    successfulWalls: nextSpeedState.successfulWalls,
+    wallSpeedLevel: nextSpeedState.wallSpeedLevel,
+    lastSpeedLevelUp: nextSpeedState.speedLevelUp,
   };
 }

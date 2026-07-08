@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { startCamera, stopCamera } from "./camera/camera";
 import { AvatarStyleSelector } from "./components/AvatarStyleSelector";
@@ -18,6 +20,7 @@ import {
   fitPoseFrameToGame,
 } from "./game/state";
 import type { AvatarStyle, GameError } from "./game/types";
+import { getWallSpeedLabel } from "./game/wallSpeed";
 import { getWallPatternById, WALL_PATTERNS } from "./game/wallPatterns";
 import {
   detectPose,
@@ -305,7 +308,9 @@ export function App() {
         <ResultScreen
           finalScore={gameState.score}
           misses={gameState.misses}
-          remainingHearts={gameState.remainingHearts}
+          successfulWalls={gameState.successfulWalls}
+          wallSpeedLevel={gameState.wallSpeedLevel}
+          wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
           onRestart={handleReplayGame}
         />
       </main>
@@ -373,6 +378,10 @@ export function App() {
           playerArea={gameState.playerArea}
           activeWallPattern={activeWallPattern}
           wallProgress={gameState.wallProgress}
+          successfulWalls={gameState.successfulWalls}
+          wallSpeedLevel={gameState.wallSpeedLevel}
+          wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
+          lastSpeedLevelUp={gameState.lastSpeedLevelUp}
         />
       </main>
     );

@@ -6,6 +6,7 @@ import {
 } from "./gameLoop";
 import { createGameState, MAX_HEARTS } from "./state";
 import { WALL_PATTERNS } from "./wallPatterns";
+import { getWallProgressStep } from "./wallSpeed";
 
 describe("advanceWallProgress", () => {
   it("プレイ状態でなければ壁進行や判定を更新しない", () => {
@@ -42,6 +43,9 @@ describe("advanceWallProgress", () => {
     });
     expect(result.score).toBe(WALL_PATTERNS[0].scoreValue);
     expect(result.misses).toBe(0);
+    expect(result.successfulWalls).toBe(1);
+    expect(result.wallSpeedLevel).toBe(1);
+    expect(result.lastSpeedLevelUp).toBe(false);
     expect(result.wallProgress).toBe(0);
     expect(result.wallSequenceIndex).toBe(1);
     expect(result.activeWallPatternId).toBe(WALL_PATTERNS[1].id);
@@ -67,7 +71,28 @@ describe("advanceWallProgress", () => {
     expect(result.lastJudgment?.type).toBe("miss");
     expect(result.misses).toBe(1);
     expect(result.remainingHearts).toBe(MAX_HEARTS - 1);
+    expect(result.successfulWalls).toBe(0);
+    expect(result.wallSpeedLevel).toBe(1);
+    expect(result.lastSpeedLevelUp).toBe(false);
     expect(result.score).toBe(0);
+  });
+
+  it("成功枚数が閾値に達したら速度段階を上げ、次の壁から進行量を増やす", () => {
+    const state = {
+      ...createGameState("playing"),
+      successfulWalls: 2,
+      wallSpeedLevel: 1,
+      wallProgress: WALL_PROGRESS_PASSED - WALL_PROGRESS_STEP,
+    };
+
+    const result = advanceWallProgress(state, WALL_PATTERNS);
+    const nextTick = advanceWallProgress(result, WALL_PATTERNS);
+
+    expect(result.lastJudgment?.type).toBe("success");
+    expect(result.successfulWalls).toBe(3);
+    expect(result.wallSpeedLevel).toBe(2);
+    expect(result.lastSpeedLevelUp).toBe(true);
+    expect(nextTick.wallProgress).toBe(getWallProgressStep(2));
   });
 
   it("ハートがなくなったら結果状態へ遷移する", () => {
@@ -106,6 +131,9 @@ describe("advanceWallProgress", () => {
     expect(result.lastJudgment?.type).toBe("notDetected");
     expect(result.misses).toBe(0);
     expect(result.remainingHearts).toBe(MAX_HEARTS);
+    expect(result.successfulWalls).toBe(0);
+    expect(result.wallSpeedLevel).toBe(1);
+    expect(result.lastSpeedLevelUp).toBe(false);
     expect(result.score).toBe(0);
   });
 

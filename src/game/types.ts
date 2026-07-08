@@ -38,12 +38,52 @@ export type SafeArea = {
   height: number;
 };
 
+export type SafeZone =
+  | {
+      type: "rect";
+      id: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }
+  | {
+      type: "ellipse";
+      id: string;
+      cx: number;
+      cy: number;
+      rx: number;
+      ry: number;
+    }
+  | {
+      type: "capsule";
+      id: string;
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      radius: number;
+    }
+  | {
+      type: "polygon";
+      id: string;
+      points: readonly {
+        x: number;
+        y: number;
+      }[];
+    };
+
+export type SafeShape = {
+  zones: readonly SafeZone[];
+};
+
 export type WallVerticalAnchor = "top" | "ground" | "center";
 
 export type WallPattern = {
   id: string;
   name: string;
   safeArea: SafeArea;
+  safeShape?: SafeShape;
   verticalAnchor: WallVerticalAnchor;
   scoreValue: number;
 };
@@ -94,4 +134,7 @@ export type GameState = {
   activeWallPatternId: string;
   wallProgress: number;
   wallSequenceIndex: number;
+  successfulWalls: number;
+  wallSpeedLevel: number;
+  lastSpeedLevelUp: boolean;
 };

@@ -81,6 +81,62 @@ describe("WALL_PATTERNS", () => {
     }
   });
 
+  it("複合形状を持つパターンのゾーンは正規化範囲内でIDが一意である", () => {
+    const shapedPatterns = WALL_PATTERNS.filter((pattern) => pattern.safeShape);
+
+    expect(shapedPatterns.length).toBeGreaterThan(0);
+
+    for (const pattern of shapedPatterns) {
+      const zones = pattern.safeShape?.zones ?? [];
+      const zoneIds = new Set(zones.map((zone) => zone.id));
+
+      expect(zoneIds.size).toBe(zones.length);
+
+      for (const zone of zones) {
+        if (zone.type === "rect") {
+          expect(zone.x).toBeGreaterThanOrEqual(0);
+          expect(zone.y).toBeGreaterThanOrEqual(0);
+          expect(zone.width).toBeGreaterThan(0);
+          expect(zone.height).toBeGreaterThan(0);
+          expect(zone.x + zone.width).toBeLessThanOrEqual(1);
+          expect(zone.y + zone.height).toBeLessThanOrEqual(1);
+        }
+
+        if (zone.type === "ellipse") {
+          expect(zone.cx).toBeGreaterThanOrEqual(0);
+          expect(zone.cy).toBeGreaterThanOrEqual(0);
+          expect(zone.cx).toBeLessThanOrEqual(1);
+          expect(zone.cy).toBeLessThanOrEqual(1);
+          expect(zone.rx).toBeGreaterThan(0);
+          expect(zone.ry).toBeGreaterThan(0);
+        }
+
+        if (zone.type === "capsule") {
+          expect(zone.x1).toBeGreaterThanOrEqual(0);
+          expect(zone.y1).toBeGreaterThanOrEqual(0);
+          expect(zone.x2).toBeGreaterThanOrEqual(0);
+          expect(zone.y2).toBeGreaterThanOrEqual(0);
+          expect(zone.x1).toBeLessThanOrEqual(1);
+          expect(zone.y1).toBeLessThanOrEqual(1);
+          expect(zone.x2).toBeLessThanOrEqual(1);
+          expect(zone.y2).toBeLessThanOrEqual(1);
+          expect(zone.radius).toBeGreaterThan(0);
+        }
+
+        if (zone.type === "polygon") {
+          expect(zone.points.length).toBeGreaterThanOrEqual(3);
+
+          for (const point of zone.points) {
+            expect(point.x).toBeGreaterThanOrEqual(0);
+            expect(point.y).toBeGreaterThanOrEqual(0);
+            expect(point.x).toBeLessThanOrEqual(1);
+            expect(point.y).toBeLessThanOrEqual(1);
+          }
+        }
+      }
+    }
+  });
+
   it("下端まで開く設計の安全領域は壁の下端まで届いている", () => {
     for (const id of BOTTOM_OPEN_PATTERN_IDS) {
       const pattern = getWallPatternById(id);

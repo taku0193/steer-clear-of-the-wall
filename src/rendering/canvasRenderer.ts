@@ -3,6 +3,8 @@ import type {
   MockPose,
   PoseInputMode,
   SafeArea,
+  SafeShape,
+  SafeZone,
   WallPattern,
 } from "../game/types";
 import type {
@@ -75,7 +77,6 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
     input.wallProgress,
     input.wallPattern.verticalAnchor,
   );
-  const safeRect = getNestedRect(wallRect, input.wallPattern.safeArea);
 
   context.setTransform(
     viewport.pixelRatio,
@@ -88,7 +89,7 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
   context.clearRect(0, 0, width, height);
   drawBackground(context, width, height);
   drawDepthGuide(context, width, height, input.wallProgress);
-  drawWall(context, wallRect, safeRect);
+  drawWall(context, wallRect, input.wallPattern);
 
   if (input.poseInputMode === "camera") {
     if (input.poseFrame?.detected) {
@@ -180,32 +181,150 @@ function drawDepthGuide(
   context.stroke();
 }
 
-function drawWall(context: CanvasRenderingContext2D, wallRect: Rect, safeRect: Rect) {
+function drawWall(
+  context: CanvasRenderingContext2D,
+  wallRect: Rect,
+  wallPattern: WallPattern,
+) {
+  context.save();
   context.fillStyle = "rgba(248, 113, 113, 0.72)";
-  context.fillRect(wallRect.x, wallRect.y, wallRect.width, safeRect.y - wallRect.y);
-  context.fillRect(
-    wallRect.x,
-    safeRect.y + safeRect.height,
-    wallRect.width,
-    wallRect.y + wallRect.height - (safeRect.y + safeRect.height),
-  );
-  context.fillRect(wallRect.x, safeRect.y, safeRect.x - wallRect.x, safeRect.height);
-  context.fillRect(
-    safeRect.x + safeRect.width,
-    safeRect.y,
-    wallRect.x + wallRect.width - (safeRect.x + safeRect.width),
-    safeRect.height,
-  );
+  context.fillRect(wallRect.x, wallRect.y, wallRect.width, wallRect.height);
+
+  context.globalCompositeOperation = "destination-out";
+  context.fillStyle = "#000000";
+  drawSafeAreaPath(context, wallRect, wallPattern);
+  context.fill();
+  context.restore();
 
   context.strokeStyle = "rgba(255, 255, 255, 0.58)";
   context.lineWidth = 3;
   context.strokeRect(wallRect.x, wallRect.y, wallRect.width, wallRect.height);
 
+  context.save();
   context.fillStyle = "rgba(52, 211, 153, 0.26)";
-  context.fillRect(safeRect.x, safeRect.y, safeRect.width, safeRect.height);
+  drawSafeAreaPath(context, wallRect, wallPattern);
+  context.fill();
   context.strokeStyle = "#34d399";
-  context.lineWidth = 4;
-  context.strokeRect(safeRect.x, safeRect.y, safeRect.width, safeRect.height);
+  context.lineWidth = wallPattern.safeShape ? 5 : 4;
+  context.lineJoin = "round";
+  context.lineCap = "round";
+  context.stroke();
+  context.restore();
+}
+
+function drawSafeAreaPath(
+  context: CanvasRenderingContext2D,
+  wallRect: Rect,
+  wallPattern: WallPattern,
+) {
+  context.beginPath();
+
+  if (wallPattern.safeShape) {
+    drawSafeShapePath(context, wallRect, wallPattern.safeShape);
+    return;
+  }
+
+  const safeRect = getNestedRect(wallRect, wallPattern.safeArea);
+  context.rect(safeRect.x, safeRect.y, safeRect.width, safeRect.height);
+}
+
+function drawSafeShapePath(
+  context: CanvasRenderingContext2D,
+  wallRect: Rect,
+  safeShape: SafeShape,
+) {
+  for (const zone of safeShape.zones) {
+    drawSafeZonePath(context, wallRect, zone);
+  }
+}
+
+function drawSafeZonePath(
+  context: CanvasRenderingContext2D,
+  wallRect: Rect,
+  zone: SafeZone,
+) {
+  switch (zone.type) {
+    case "rect": {
+      const rect = getNestedRect(wallRect, zone);
+      context.rect(rect.x, rect.y, rect.width, rect.height);
+      return;
+    }
+    case "ellipse":
+      context.ellipse(
+        wallRect.x + zone.cx * wallRect.width,
+        wallRect.y + zone.cy * wallRect.height,
+        zone.rx * wallRect.width,
+        zone.ry * wallRect.height,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      return;
+    case "capsule":
+      drawCapsulePath(context, wallRect, zone);
+      return;
+    case "polygon":
+      drawPolygonPath(context, wallRect, zone.points);
+      return;
+  }
+}
+
+function drawPolygonPath(
+  context: CanvasRenderingContext2D,
+  wallRect: Rect,
+  points: readonly { x: number; y: number }[],
+) {
+  const [firstPoint, ...restPoints] = points;
+
+  if (!firstPoint) {
+    return;
+  }
+
+  context.moveTo(
+    wallRect.x + firstPoint.x * wallRect.width,
+    wallRect.y + firstPoint.y * wallRect.height,
+  );
+
+  for (const point of restPoints) {
+    context.lineTo(
+      wallRect.x + point.x * wallRect.width,
+      wallRect.y + point.y * wallRect.height,
+    );
+  }
+
+  context.closePath();
+}
+
+function drawCapsulePath(
+  context: CanvasRenderingContext2D,
+  wallRect: Rect,
+  zone: Extract<SafeZone, { type: "capsule" }>,
+) {
+  const x1 = wallRect.x + zone.x1 * wallRect.width;
+  const y1 = wallRect.y + zone.y1 * wallRect.height;
+  const x2 = wallRect.x + zone.x2 * wallRect.width;
+  const y2 = wallRect.y + zone.y2 * wallRect.height;
+  const radius = zone.radius * Math.min(wallRect.width, wallRect.height);
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const length = Math.hypot(dx, dy);
+
+  if (length === 0) {
+    context.moveTo(x1 + radius, y1);
+    context.arc(x1, y1, radius, 0, Math.PI * 2);
+    return;
+  }
+
+  const normalX = -dy / length;
+  const normalY = dx / length;
+  const angle = Math.atan2(dy, dx);
+
+  context.moveTo(x1 + normalX * radius, y1 + normalY * radius);
+  context.lineTo(x2 + normalX * radius, y2 + normalY * radius);
+  context.arc(x2, y2, radius, angle + Math.PI / 2, angle - Math.PI / 2);
+  context.lineTo(x1 - normalX * radius, y1 - normalY * radius);
+  context.arc(x1, y1, radius, angle - Math.PI / 2, angle + Math.PI / 2);
+  context.closePath();
 }
 
 function drawAvatar(

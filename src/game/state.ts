@@ -1,12 +1,14 @@
 import type { PoseFrame, PoseLandmarkName } from "../pose/poseTypes";
 import type { GamePhase, GameState, SafeArea } from "./types";
 import { DEFAULT_MOCK_POSE } from "./mockPose";
+import { INITIAL_WALL_SPEED_LEVEL } from "./wallSpeed";
 import { getWallPatternByIndex } from "./wallPatterns";
 
 export const INITIAL_GAME_PHASE: GamePhase = "title";
 export const MAX_HEARTS = 5;
 export const INITIAL_SCORE = 0;
 export const INITIAL_MISSES = 0;
+export const INITIAL_SUCCESSFUL_WALLS = 0;
 export const INITIAL_WALL_SEQUENCE_INDEX = 0;
 export const INITIAL_WALL_PROGRESS = 0;
 export const MIN_POSE_VISIBILITY = 0.5;
@@ -55,6 +57,9 @@ export function createGameState(phase: GamePhase): GameState {
     activeWallPatternId: initialWallPattern.id,
     wallProgress: INITIAL_WALL_PROGRESS,
     wallSequenceIndex: INITIAL_WALL_SEQUENCE_INDEX,
+    successfulWalls: INITIAL_SUCCESSFUL_WALLS,
+    wallSpeedLevel: INITIAL_WALL_SPEED_LEVEL,
+    lastSpeedLevelUp: false,
   };
 }
 
