@@ -87,4 +87,82 @@ describe("judgeCollision", () => {
       patternId: wallPattern.id,
     });
   });
+
+  it("safeShapeがある場合は代表点が複合形状内にあれば成功を返す", () => {
+    const result = judgeCollision({
+      playerArea: {
+        x: 0.37,
+        y: 0.18,
+        width: 0.26,
+        height: 0.66,
+      },
+      wallPattern: {
+        ...wallPattern,
+        safeShape: {
+          zones: [
+            {
+              type: "ellipse",
+              id: "head",
+              cx: 0.5,
+              cy: 0.25,
+              rx: 0.18,
+              ry: 0.12,
+            },
+            {
+              type: "capsule",
+              id: "body",
+              x1: 0.5,
+              y1: 0.3,
+              x2: 0.5,
+              y2: 0.72,
+              radius: 0.24,
+            },
+            {
+              type: "rect",
+              id: "feet",
+              x: 0.32,
+              y: 0.72,
+              width: 0.36,
+              height: 0.18,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(result.type).toBe("success");
+  });
+
+  it("safeShapeがある場合は代表点が外れると失敗を返す", () => {
+    const result = judgeCollision({
+      playerArea: {
+        x: 0.05,
+        y: 0.18,
+        width: 0.26,
+        height: 0.66,
+      },
+      wallPattern: {
+        ...wallPattern,
+        safeShape: {
+          zones: [
+            {
+              type: "capsule",
+              id: "body",
+              x1: 0.5,
+              y1: 0.2,
+              x2: 0.5,
+              y2: 0.8,
+              radius: 0.15,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(result).toEqual({
+      type: "miss",
+      patternId: wallPattern.id,
+      reason: "outsideSafeArea",
+    });
+  });
 });

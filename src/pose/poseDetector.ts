@@ -14,6 +14,12 @@ import type {
 } from "./poseTypes";
 
 const MEDIAPIPE_VERSION = "0.10.35";
+const SUPPRESSED_MEDIAPIPE_LOG_PATTERNS = [
+  "OpenGL error checking is disabled",
+  "Created TensorFlow Lite XNNPACK delegate for CPU",
+  "Feedback manager requires a model with a single signature inference",
+  "Using NORM_RECT without IMAGE_DIMENSIONS",
+] as const;
 
 export const DEFAULT_POSE_WASM_BASE_URL =
   `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
@@ -45,6 +51,8 @@ const LANDMARK_INDEX_BY_NAME: Readonly<Record<PoseLandmarkName, number>> = {
 export async function initializePoseDetector(
   options: PoseDetectorOptions = {},
 ): Promise<PoseDetectorInitializationResult> {
+  const restoreMediaPipeConsole = installMediaPipeConsoleFilter();
+
   try {
     const visionFiles = await FilesetResolver.forVisionTasks(
       options.wasmBaseUrl ?? DEFAULT_POSE_WASM_BASE_URL,
@@ -60,13 +68,106 @@ export async function initializePoseDetector(
 
     return {
       ok: true,
-      detector: new MediaPipePoseDetector(landmarker),
+      detector: new MediaPipePoseDetector(landmarker, restoreMediaPipeConsole),
     };
   } catch (error: unknown) {
+    restoreMediaPipeConsole();
+
     return {
       ok: false,
       error: createPoseError("poseInitializationFailed", error),
     };
+  }
+}
+
+type ConsoleFilterState = {
+  references: number;
+  originalLog: typeof console.log;
+  originalInfo: typeof console.info;
+  originalWarn: typeof console.warn;
+  originalError: typeof console.error;
+};
+
+let activeConsoleFilterState: ConsoleFilterState | null = null;
+
+function installMediaPipeConsoleFilter(): () => void {
+  if (typeof console === "undefined") {
+    return () => {};
+  }
+
+  if (activeConsoleFilterState) {
+    activeConsoleFilterState.references += 1;
+
+    return () => releaseMediaPipeConsoleFilter();
+  }
+
+  activeConsoleFilterState = {
+    references: 1,
+    originalLog: console.log,
+    originalInfo: console.info,
+    originalWarn: console.warn,
+    originalError: console.error,
+  };
+
+  console.log = createFilteredConsoleMethod(activeConsoleFilterState.originalLog);
+  console.info = createFilteredConsoleMethod(activeConsoleFilterState.originalInfo);
+  console.warn = createFilteredConsoleMethod(activeConsoleFilterState.originalWarn);
+  console.error = createFilteredConsoleMethod(activeConsoleFilterState.originalError);
+
+  return () => releaseMediaPipeConsoleFilter();
+}
+
+function releaseMediaPipeConsoleFilter(): void {
+  if (!activeConsoleFilterState) {
+    return;
+  }
+
+  activeConsoleFilterState.references -= 1;
+
+  if (activeConsoleFilterState.references > 0) {
+    return;
+  }
+
+  console.log = activeConsoleFilterState.originalLog;
+  console.info = activeConsoleFilterState.originalInfo;
+  console.warn = activeConsoleFilterState.originalWarn;
+  console.error = activeConsoleFilterState.originalError;
+  activeConsoleFilterState = null;
+}
+
+function createFilteredConsoleMethod(
+  originalMethod: (...data: unknown[]) => void,
+): (...data: unknown[]) => void {
+  return (...data: unknown[]) => {
+    if (isSuppressedMediaPipeLog(data)) {
+      return;
+    }
+
+    originalMethod(...data);
+  };
+}
+
+function isSuppressedMediaPipeLog(data: readonly unknown[]): boolean {
+  const message = data.map(toConsoleMessagePart).join(" ");
+
+  return SUPPRESSED_MEDIAPIPE_LOG_PATTERNS.some((pattern) =>
+    message.includes(pattern),
+  );
+}
+
+function toConsoleMessagePart(entry: unknown): string {
+  if (typeof entry === "string") {
+    return entry;
+  }
+
+  if (entry instanceof Error) {
+    return entry.message;
+  }
+
+  try {
+    return String(entry);
+  } catch {
+    return "";
   }
 }
 
@@ -84,9 +185,14 @@ export function disposePoseDetector(detector: PoseDetectorAdapter): void {
 
 class MediaPipePoseDetector implements PoseDetectorAdapter {
   private landmarker: PoseLandmarker | null;
+  private restoreMediaPipeConsole: (() => void) | null;
 
-  constructor(landmarker: PoseLandmarker) {
+  constructor(
+    landmarker: PoseLandmarker,
+    restoreMediaPipeConsole: () => void,
+  ) {
     this.landmarker = landmarker;
+    this.restoreMediaPipeConsole = restoreMediaPipeConsole;
   }
 
   detect(
@@ -120,16 +226,20 @@ class MediaPipePoseDetector implements PoseDetectorAdapter {
 
   dispose(): void {
     const landmarker = this.landmarker;
+    const restoreMediaPipeConsole = this.restoreMediaPipeConsole;
     this.landmarker = null;
+    this.restoreMediaPipeConsole = null;
 
-    if (!landmarker) {
-      return;
+    if (landmarker) {
+      try {
+        landmarker.close();
+      } catch {
+        // 解放処理は再実行可能に保ち、画面遷移を妨げない。
+      }
     }
 
-    try {
-      landmarker.close();
-    } catch {
-      // 解放処理は再実行可能に保ち、画面遷移を妨げない。
+    if (restoreMediaPipeConsole) {
+      restoreMediaPipeConsole();
     }
   }
 }

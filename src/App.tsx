@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { startCamera, stopCamera } from "./camera/camera";
 import { AvatarStyleSelector } from "./components/AvatarStyleSelector";
@@ -18,6 +20,7 @@ import {
   fitPoseFrameToGame,
 } from "./game/state";
 import type { AvatarStyle, GameError } from "./game/types";
+import { getWallSpeedLabel } from "./game/wallSpeed";
 import { getWallPatternById, WALL_PATTERNS } from "./game/wallPatterns";
 import {
   detectPose,
@@ -177,37 +180,6 @@ export function App() {
       return;
     }
 
-    const timerId = window.setTimeout(() => {
-      setGameState((currentState) => {
-        if (currentState.phase !== "playing") {
-          return currentState;
-        }
-
-        const nextRemainingSeconds = Math.max(currentState.remainingSeconds - 1, 0);
-
-        if (nextRemainingSeconds === 0) {
-          return {
-            ...currentState,
-            phase: "result",
-            remainingSeconds: 0,
-          };
-        }
-
-        return {
-          ...currentState,
-          remainingSeconds: nextRemainingSeconds,
-        };
-      });
-    }, GAME_TICK_INTERVAL_MS);
-
-    return () => window.clearTimeout(timerId);
-  }, [gameState.phase, gameState.remainingSeconds]);
-
-  useEffect(() => {
-    if (gameState.phase !== "playing") {
-      return;
-    }
-
     const timerId = window.setInterval(() => {
       setGameState((currentState) =>
         advanceWallProgress(currentState, WALL_PATTERNS),
@@ -336,6 +308,9 @@ export function App() {
         <ResultScreen
           finalScore={gameState.score}
           misses={gameState.misses}
+          successfulWalls={gameState.successfulWalls}
+          wallSpeedLevel={gameState.wallSpeedLevel}
+          wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
           onRestart={handleReplayGame}
         />
       </main>
@@ -391,7 +366,7 @@ export function App() {
           />
         )}
         <GameScreen
-          remainingSeconds={gameState.remainingSeconds}
+          remainingHearts={gameState.remainingHearts}
           score={gameState.score}
           misses={gameState.misses}
           avatarStyle={gameState.avatarStyle}
@@ -403,6 +378,10 @@ export function App() {
           playerArea={gameState.playerArea}
           activeWallPattern={activeWallPattern}
           wallProgress={gameState.wallProgress}
+          successfulWalls={gameState.successfulWalls}
+          wallSpeedLevel={gameState.wallSpeedLevel}
+          wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
+          lastSpeedLevelUp={gameState.lastSpeedLevelUp}
         />
       </main>
     );

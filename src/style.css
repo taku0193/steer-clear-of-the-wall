@@ -81,8 +81,8 @@ select {
   top: calc(16px + env(safe-area-inset-top));
   left: calc(16px + env(safe-area-inset-left));
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  width: min(360px, calc(100vw - 32px));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(460px, calc(100vw - 32px));
   gap: 6px;
   pointer-events: none;
 }
@@ -115,6 +115,17 @@ select {
   font-size: clamp(1.35rem, 2.6vw, 2rem);
   line-height: 1;
   text-overflow: ellipsis;
+}
+
+.hud-item .heart-readout {
+  color: #fda4af;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.hud-item .speed-readout {
+  color: #a7f3d0;
 }
 
 .game-canvas {
@@ -386,7 +397,7 @@ h1 {
 
 .result-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 

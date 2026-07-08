@@ -17,7 +17,7 @@ import {
 import { advanceVisualWallProgress } from "../rendering/wallMotion";
 
 type GameScreenProps = {
-  remainingSeconds: number;
+  remainingHearts: number;
   score: number;
   misses: number;
   avatarStyle: AvatarStyle;
@@ -29,10 +29,14 @@ type GameScreenProps = {
   playerArea: SafeArea | null;
   activeWallPattern: WallPattern;
   wallProgress: number;
+  successfulWalls: number;
+  wallSpeedLevel: number;
+  wallSpeedLabel: string;
+  lastSpeedLevelUp: boolean;
 };
 
 export function GameScreen({
-  remainingSeconds,
+  remainingHearts,
   score,
   misses,
   avatarStyle,
@@ -44,6 +48,10 @@ export function GameScreen({
   playerArea,
   activeWallPattern,
   wallProgress,
+  successfulWalls,
+  wallSpeedLevel,
+  wallSpeedLabel,
+  lastSpeedLevelUp,
 }: GameScreenProps) {
   const screenRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -53,9 +61,10 @@ export function GameScreen({
     useState<CanvasViewport | null>(null);
   const [visualWallProgress, setVisualWallProgress] =
     useState(wallProgress);
-  const judgmentFeedback = getJudgmentFeedback(lastJudgment);
+  const judgmentFeedback = getJudgmentFeedback(lastJudgment, lastSpeedLevelUp);
   const poseStatus = getPoseStatusLabel(poseDetectionStatus);
   const inputModeLabel = poseInputMode === "camera" ? "カメラ" : "モック";
+  const heartDisplay = getHeartDisplay(remainingHearts);
 
   useEffect(() => {
     logicalWallProgressRef.current = wallProgress;
@@ -183,9 +192,13 @@ export function GameScreen({
 
       <header className="game-hud" aria-label="プレイ状況">
         <div className="hud-item">
-          <span>残り時間</span>
-          <strong>{remainingSeconds}</strong>
-          <small>秒</small>
+          <span>ハート</span>
+          <strong
+            className="heart-readout"
+            aria-label={`残りハート${remainingHearts}個`}
+          >
+            {heartDisplay}
+          </strong>
         </div>
         <div className="hud-item">
           <span>スコア</span>
@@ -194,6 +207,15 @@ export function GameScreen({
         <div className="hud-item">
           <span>ミス</span>
           <strong>{misses}</strong>
+        </div>
+        <div className="hud-item">
+          <span>速度</span>
+          <strong
+            className="speed-readout"
+            aria-label={`速度レベル${wallSpeedLevel}、${wallSpeedLabel}、クリア${successfulWalls}枚`}
+          >
+            Lv.{wallSpeedLevel}
+          </strong>
         </div>
       </header>
 
@@ -243,12 +265,21 @@ function getPoseStatusLabel(status: PoseDetectionStatus): string {
   }
 }
 
+function getHeartDisplay(remainingHearts: number): string {
+  const heartCount = Math.min(Math.max(Math.trunc(remainingHearts), 0), 5);
+
+  return "♥".repeat(heartCount) + "♡".repeat(5 - heartCount);
+}
+
 type JudgmentFeedback = {
   label: string;
   status: "pending" | "success" | "miss" | "not-detected";
 };
 
-function getJudgmentFeedback(judgment: JudgmentResult | null): JudgmentFeedback {
+function getJudgmentFeedback(
+  judgment: JudgmentResult | null,
+  speedLevelUp: boolean,
+): JudgmentFeedback {
   if (!judgment) {
     return {
       label: "判定待ち",
@@ -258,7 +289,7 @@ function getJudgmentFeedback(judgment: JudgmentResult | null): JudgmentFeedback 
 
   if (judgment.type === "success") {
     return {
-      label: "成功",
+      label: speedLevelUp ? "成功 / 速度アップ" : "成功",
       status: "success",
     };
   }
