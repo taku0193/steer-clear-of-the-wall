@@ -4,3 +4,5 @@ dist/
 .next/
 tsconfig.tsbuildinfo
 npm-debug.log*
+playwright-report/
+test-results/

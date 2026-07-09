@@ -1,13 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { startCamera, stopCamera } from "./camera/camera";
 import { AvatarStyleSelector } from "./components/AvatarStyleSelector";
+import { CalibrationPanel } from "./components/CalibrationPanel";
 import { CameraPreview } from "./components/CameraPreview";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
+import {
+  evaluateCalibration,
+  type CalibrationResult,
+} from "./game/calibration";
 import {
   advanceWallProgress,
   GAME_TICK_INTERVAL_MS,
@@ -33,6 +38,7 @@ import type {
 } from "./pose/poseTypes";
 
 const COUNTDOWN_START = 3;
+const CALIBRATION_READY_HOLD_MS = 600;
 
 export function App() {
   const [gameState, setGameState] = useState(createInitialGameState);
@@ -42,11 +48,16 @@ export function App() {
   const [poseDetector, setPoseDetector] =
     useState<PoseDetectorAdapter | null>(null);
   const [poseFrame, setPoseFrame] = useState<PoseFrame | null>(null);
+  const [calibrationPoseFrame, setCalibrationPoseFrame] =
+    useState<PoseFrame | null>(null);
+  const [displayedCalibrationResult, setDisplayedCalibrationResult] =
+    useState<CalibrationResult | null>(null);
   const [poseVideoElement, setPoseVideoElement] =
     useState<HTMLVideoElement | null>(null);
   const resourceSessionRef = useRef(0);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const poseDetectorRef = useRef<PoseDetectorAdapter | null>(null);
+  const calibrationReadyHoldStartedAtRef = useRef<number | null>(null);
 
   const releaseMediaResources = useCallback((updateState = true) => {
     resourceSessionRef.current += 1;
@@ -64,11 +75,12 @@ export function App() {
     }
 
     if (updateState) {
-      setCameraStream(null);
-      setPoseDetector(null);
-      setPoseFrame(null);
-      setPoseVideoElement(null);
-      setIsCameraStarting(false);
+        setCameraStream(null);
+        setPoseDetector(null);
+        setPoseFrame(null);
+        setCalibrationPoseFrame(null);
+        setPoseVideoElement(null);
+        setIsCameraStarting(false);
     }
   }, []);
 
@@ -122,6 +134,7 @@ export function App() {
 
         const gamePoseFrame = fitPoseFrameToGame(result.frame);
         const playerArea = createPlayerAreaFromPoseFrame(gamePoseFrame);
+        setCalibrationPoseFrame(result.frame);
         setPoseFrame(gamePoseFrame);
         setGameState((currentState) => {
           if (!isPoseDetectionPhase(currentState.phase)) {
@@ -189,6 +202,58 @@ export function App() {
     return () => window.clearInterval(timerId);
   }, [gameState.phase]);
 
+  const calibrationResult = useMemo(
+    () =>
+      evaluateCalibration({
+        poseFrame: calibrationPoseFrame,
+        detectorReady: Boolean(poseDetector),
+      }),
+    [calibrationPoseFrame, poseDetector],
+  );
+
+  useEffect(() => {
+    if (gameState.phase !== "preparing" || !cameraStream) {
+      calibrationReadyHoldStartedAtRef.current = null;
+      setDisplayedCalibrationResult(null);
+      return;
+    }
+
+    if (calibrationResult.status === "ready") {
+      calibrationReadyHoldStartedAtRef.current = Date.now();
+      setDisplayedCalibrationResult(calibrationResult);
+      return;
+    }
+
+    if (displayedCalibrationResult?.status === "ready") {
+      const holdStartedAt = calibrationReadyHoldStartedAtRef.current;
+      const elapsedMs =
+        holdStartedAt === null
+          ? CALIBRATION_READY_HOLD_MS
+          : Date.now() - holdStartedAt;
+
+      if (elapsedMs >= CALIBRATION_READY_HOLD_MS) {
+        calibrationReadyHoldStartedAtRef.current = null;
+        setDisplayedCalibrationResult(calibrationResult);
+        return;
+      }
+
+      const timerId = window.setTimeout(() => {
+        calibrationReadyHoldStartedAtRef.current = null;
+        setDisplayedCalibrationResult(calibrationResult);
+      }, CALIBRATION_READY_HOLD_MS - elapsedMs);
+
+      return () => window.clearTimeout(timerId);
+    }
+
+    calibrationReadyHoldStartedAtRef.current = null;
+    setDisplayedCalibrationResult(calibrationResult);
+  }, [
+    calibrationResult,
+    cameraStream,
+    displayedCalibrationResult?.status,
+    gameState.phase,
+  ]);
+
   function handleStartGame() {
     resetGameSession("preparing");
   }
@@ -203,6 +268,7 @@ export function App() {
       poseDetectionStatus: "initializing",
       playerArea: null,
     }));
+    setCalibrationPoseFrame(null);
     const cameraResult = await startCamera();
 
     if (resourceSession !== resourceSessionRef.current) {
@@ -329,6 +395,46 @@ export function App() {
     );
   }
 
+  if (gameState.phase === "preparing" && cameraStream) {
+    return (
+      <main
+        className="app-shell-camera-prep"
+        aria-labelledby="preparing-title"
+      >
+        <section className="camera-prep-screen" aria-live="polite">
+          <CameraPreview
+            stream={cameraStream}
+            onVideoElementChange={setPoseVideoElement}
+          />
+          <div className="camera-prep-header">
+            <p className="eyebrow">Camera Setup</p>
+            <h1 id="preparing-title">カメラ準備</h1>
+          </div>
+          <div className="camera-prep-panel">
+            <AvatarStyleSelector
+              value={gameState.avatarStyle}
+              onChange={handleAvatarStyleChange}
+            />
+            <p className="state-readout">
+              {getPosePreparationLabel(gameState.poseDetectionStatus)}
+            </p>
+            {displayedCalibrationResult && (
+              <CalibrationPanel result={displayedCalibrationResult} />
+            )}
+            <button
+              className="primary-action"
+              type="button"
+              onClick={handlePreparationComplete}
+              disabled={!poseDetector || !calibrationResult.canStart}
+            >
+              {getPreparationButtonLabel(poseDetector, calibrationResult)}
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (gameState.phase === "countdown") {
     return (
       <main className="app-shell" aria-labelledby="countdown-title">
@@ -399,49 +505,27 @@ export function App() {
           value={gameState.avatarStyle}
           onChange={handleAvatarStyleChange}
         />
-        {cameraStream ? (
-          <>
-            <CameraPreview
-              stream={cameraStream}
-              onVideoElementChange={setPoseVideoElement}
-            />
-            <p className="state-readout">
-              {getPosePreparationLabel(gameState.poseDetectionStatus)}
-            </p>
-            <button
-              className="primary-action"
-              type="button"
-              onClick={handlePreparationComplete}
-              disabled={!poseDetector}
-            >
-              {poseDetector ? "準備完了" : "姿勢検出を初期化中"}
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="state-readout">
-              {isCameraStarting ? "カメラの許可を待っています" : "カメラは未接続です"}
-            </p>
-            <div className="preparation-actions">
-              <button
-                className="primary-action"
-                type="button"
-                onClick={handleStartCamera}
-                disabled={isCameraStarting}
-              >
-                {isCameraStarting ? "カメラを起動中" : "カメラを開始"}
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                onClick={handleUseMockPose}
-                disabled={isCameraStarting}
-              >
-                モック姿勢で試す
-              </button>
-            </div>
-          </>
-        )}
+        <p className="state-readout">
+          {isCameraStarting ? "カメラの許可を待っています" : "カメラは未接続です"}
+        </p>
+        <div className="preparation-actions">
+          <button
+            className="primary-action"
+            type="button"
+            onClick={handleStartCamera}
+            disabled={isCameraStarting}
+          >
+            {isCameraStarting ? "カメラを起動中" : "カメラを開始"}
+          </button>
+          <button
+            className="secondary-action"
+            type="button"
+            onClick={handleUseMockPose}
+            disabled={isCameraStarting}
+          >
+            モック姿勢で試す
+          </button>
+        </div>
       </section>
     </main>
   );
@@ -483,6 +567,17 @@ function getPosePreparationLabel(
     case "mock":
       return "モック姿勢を使用します";
   }
+}
+
+function getPreparationButtonLabel(
+  poseDetector: PoseDetectorAdapter | null,
+  calibrationResult: CalibrationResult,
+): string {
+  if (!poseDetector) {
+    return "姿勢検出を初期化中";
+  }
+
+  return calibrationResult.canStart ? "準備完了" : "位置合わせを確認中";
 }
 
 function isPoseDetectionPhase(
