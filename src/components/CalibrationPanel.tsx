@@ -2,9 +2,13 @@ import type { CalibrationResult } from "../game/calibration";
 
 type CalibrationPanelProps = {
   result: CalibrationResult;
+  autoStartStatus?: "inactive" | "waiting";
 };
 
-export function CalibrationPanel({ result }: CalibrationPanelProps) {
+export function CalibrationPanel({
+  result,
+  autoStartStatus = "inactive",
+}: CalibrationPanelProps) {
   return (
     <section
       className={`calibration-panel calibration-panel-${result.status}`}
@@ -17,6 +21,11 @@ export function CalibrationPanel({ result }: CalibrationPanelProps) {
         </span>
         <strong>{result.summary}</strong>
       </div>
+      {autoStartStatus === "waiting" && (
+        <p className="auto-start-note">
+          位置合わせOKです。そのまま待つと自動で始まります。
+        </p>
+      )}
       <ul className="calibration-checks" aria-label="位置合わせチェック">
         {result.checks.map((check) => (
           <li

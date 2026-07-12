@@ -13,11 +13,16 @@ import {
   evaluateCalibration,
   type CalibrationResult,
 } from "./game/calibration";
+import { getAutoStartState } from "./game/autoStart";
 import {
   advanceWallProgress,
   GAME_TICK_INTERVAL_MS,
   WALL_TICK_INTERVAL_MS,
 } from "./game/gameLoop";
+import {
+  getAutoReturnDelayMs,
+  getAutoReturnDelaySeconds,
+} from "./game/exhibitionMode";
 import {
   createGameState,
   createInitialGameState,
@@ -58,6 +63,7 @@ export function App() {
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const poseDetectorRef = useRef<PoseDetectorAdapter | null>(null);
   const calibrationReadyHoldStartedAtRef = useRef<number | null>(null);
+  const gamePhaseRef = useRef(gameState.phase);
 
   const releaseMediaResources = useCallback((updateState = true) => {
     resourceSessionRef.current += 1;
@@ -89,10 +95,33 @@ export function App() {
   }, [releaseMediaResources]);
 
   useEffect(() => {
+    gamePhaseRef.current = gameState.phase;
+  }, [gameState.phase]);
+
+  useEffect(() => {
     if (gameState.phase === "result" || gameState.phase === "error") {
       releaseMediaResources();
     }
   }, [gameState.phase, releaseMediaResources]);
+
+  useEffect(() => {
+    const delayMs = getAutoReturnDelayMs(gameState.phase, {
+      hasActiveCamera: Boolean(cameraStream),
+    });
+
+    if (delayMs === null) {
+      return;
+    }
+
+    const targetPhase = gameState.phase;
+    const timerId = window.setTimeout(() => {
+      if (gamePhaseRef.current === targetPhase) {
+        resetGameSession("title");
+      }
+    }, delayMs);
+
+    return () => window.clearTimeout(timerId);
+  }, [cameraStream, gameState.phase, releaseMediaResources]);
 
   useEffect(() => {
     if (
@@ -211,6 +240,31 @@ export function App() {
     [calibrationPoseFrame, poseDetector],
   );
 
+  const autoStartState = useMemo(
+    () =>
+      getAutoStartState({
+        phase: gameState.phase,
+        hasActiveCamera: Boolean(cameraStream),
+        detectorReady: Boolean(poseDetector),
+        calibrationCanStart: calibrationResult.canStart,
+      }),
+    [cameraStream, calibrationResult.canStart, gameState.phase, poseDetector],
+  );
+
+  const startCountdownFromPreparation = useCallback(() => {
+    setCountdownValue(COUNTDOWN_START);
+    setGameState((currentState) => {
+      if (currentState.phase !== "preparing") {
+        return currentState;
+      }
+
+      return {
+        ...currentState,
+        phase: "countdown",
+      };
+    });
+  }, []);
+
   useEffect(() => {
     if (gameState.phase !== "preparing" || !cameraStream) {
       calibrationReadyHoldStartedAtRef.current = null;
@@ -253,6 +307,18 @@ export function App() {
     displayedCalibrationResult?.status,
     gameState.phase,
   ]);
+
+  useEffect(() => {
+    if (autoStartState.status !== "waiting") {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      startCountdownFromPreparation();
+    }, autoStartState.delayMs);
+
+    return () => window.clearTimeout(timerId);
+  }, [autoStartState, startCountdownFromPreparation]);
 
   function handleStartGame() {
     resetGameSession("preparing");
@@ -320,14 +386,6 @@ export function App() {
     }));
   }
 
-  function handlePreparationComplete() {
-    setCountdownValue(COUNTDOWN_START);
-    setGameState((currentState) => ({
-      ...currentState,
-      phase: "countdown",
-    }));
-  }
-
   function handleUseMockPose() {
     releaseMediaResources();
     setCountdownValue(COUNTDOWN_START);
@@ -369,6 +427,8 @@ export function App() {
   }
 
   if (gameState.phase === "result") {
+    const autoReturnDelayMs = getAutoReturnDelayMs(gameState.phase);
+
     return (
       <main className="app-shell">
         <ResultScreen
@@ -377,17 +437,22 @@ export function App() {
           successfulWalls={gameState.successfulWalls}
           wallSpeedLevel={gameState.wallSpeedLevel}
           wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
+          autoReturnSeconds={getAutoReturnDelaySeconds(autoReturnDelayMs)}
           onRestart={handleReplayGame}
+          onBackToTitle={handleReturnToTitle}
         />
       </main>
     );
   }
 
   if (gameState.phase === "error") {
+    const autoReturnDelayMs = getAutoReturnDelayMs(gameState.phase);
+
     return (
       <main className="app-shell">
         <ErrorScreen
           message={getGameErrorMessage(gameState.error)}
+          autoReturnSeconds={getAutoReturnDelaySeconds(autoReturnDelayMs)}
           onRetry={handleReplayGame}
           onBackToTitle={handleReturnToTitle}
         />
@@ -419,15 +484,22 @@ export function App() {
               {getPosePreparationLabel(gameState.poseDetectionStatus)}
             </p>
             {displayedCalibrationResult && (
-              <CalibrationPanel result={displayedCalibrationResult} />
+              <CalibrationPanel
+                result={displayedCalibrationResult}
+                autoStartStatus={autoStartState.status}
+              />
             )}
-            <button
-              className="primary-action"
-              type="button"
-              onClick={handlePreparationComplete}
-              disabled={!poseDetector || !calibrationResult.canStart}
+            <p
+              className={`auto-start-readout auto-start-readout-${autoStartState.status}`}
             >
-              {getPreparationButtonLabel(poseDetector, calibrationResult)}
+              {getAutoStartReadout(autoStartState.status)}
+            </p>
+            <button
+              className="secondary-action exhibition-reset-action"
+              type="button"
+              onClick={handleReturnToTitle}
+            >
+              タイトルへ戻る
             </button>
           </div>
         </section>
@@ -454,6 +526,13 @@ export function App() {
           <p className="summary">
             カウントダウン中です。壁との判定はまだ始まりません。
           </p>
+          <button
+            className="secondary-action exhibition-reset-action"
+            type="button"
+            onClick={handleReturnToTitle}
+          >
+            タイトルへ戻る
+          </button>
         </section>
       </main>
     );
@@ -488,6 +567,7 @@ export function App() {
           wallSpeedLevel={gameState.wallSpeedLevel}
           wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
           lastSpeedLevelUp={gameState.lastSpeedLevelUp}
+          onResetToTitle={handleReturnToTitle}
         />
       </main>
     );
@@ -524,6 +604,13 @@ export function App() {
             disabled={isCameraStarting}
           >
             モック姿勢で試す
+          </button>
+          <button
+            className="secondary-action"
+            type="button"
+            onClick={handleReturnToTitle}
+          >
+            タイトルへ戻る
           </button>
         </div>
       </section>
@@ -569,17 +656,6 @@ function getPosePreparationLabel(
   }
 }
 
-function getPreparationButtonLabel(
-  poseDetector: PoseDetectorAdapter | null,
-  calibrationResult: CalibrationResult,
-): string {
-  if (!poseDetector) {
-    return "姿勢検出を初期化中";
-  }
-
-  return calibrationResult.canStart ? "準備完了" : "位置合わせを確認中";
-}
-
 function isPoseDetectionPhase(
   phase: "title" | "preparing" | "countdown" | "playing" | "result" | "error",
 ): boolean {
@@ -588,4 +664,12 @@ function isPoseDetectionPhase(
     phase === "countdown" ||
     phase === "playing"
   );
+}
+
+function getAutoStartReadout(status: "inactive" | "waiting"): string {
+  if (status === "waiting") {
+    return "そのままお待ちください。まもなく始まります。";
+  }
+
+  return "全身が映ると自動で始まります。";
 }

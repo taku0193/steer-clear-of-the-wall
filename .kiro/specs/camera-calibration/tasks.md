@@ -10,7 +10,7 @@
 
 ## Tasks
 
-- [ ] 1. キャリブレーション判定の型と閾値を追加する
+- [x] 1. キャリブレーション判定の型と閾値を追加する
   - 作業内容: `CalibrationStatus`, `CalibrationGuidance`, `CalibrationCheck`, `CalibrationResult`, `CalibrationInput`, `CALIBRATION_THRESHOLDS` を定義する。
   - 変更するファイル: `src/game/calibration.ts`
   - 依存関係: なし
@@ -19,7 +19,7 @@
   - _Requirements: 1.1, 1.2, 3.1, 6.1, 6.3_
   - _Boundary: Game Domain_
 
-- [ ] 2. 元PoseFrameから未縮尺身体領域を作る
+- [x] 2. 元PoseFrameから未縮尺身体領域を作る
   - 作業内容: 可視ランドマークからカメラ座標系の身体外接領域を作り、必須ランドマーク不足を判定できる純粋関数を追加する。
   - 変更するファイル: `src/game/calibration.ts`, `src/game/calibration.test.ts`
   - 依存関係: 1
@@ -28,7 +28,7 @@
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.2, 6.3_
   - _Boundary: Game Domain_
 
-- [ ] 3. 立ち位置と距離感の評価ロジックを追加する
+- [x] 3. 立ち位置と距離感の評価ロジックを追加する
   - 作業内容: 身体中心、身体高さ、身体幅から、左右寄り、近すぎる、遠すぎる、良好状態を判定する。
   - 変更するファイル: `src/game/calibration.ts`, `src/game/calibration.test.ts`
   - 依存関係: 2
@@ -37,7 +37,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 6.2_
   - _Boundary: Game Domain_
 
-- [ ] 4. キャリブレーション結果の表示コンポーネントを追加する
+- [x] 4. キャリブレーション結果の表示コンポーネントを追加する
   - 作業内容: `CalibrationPanel` を作り、状態見出し、主案内、全身・中央・距離・安定のチェック一覧を表示する。
   - 変更するファイル: `src/components/CalibrationPanel.tsx`, `src/style.css`
   - 依存関係: 1, 3
@@ -46,7 +46,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 5.1, 7.2_
   - _Boundary: UI Components_
 
-- [ ] 5. 準備画面へキャリブレーションを接続する
+- [x] 5. 準備画面へキャリブレーションを接続する
   - 作業内容: `App` で `evaluateCalibration()` を呼び、実カメラ接続後の準備画面に `CalibrationPanel` を表示する。
   - 変更するファイル: `src/App.tsx`
   - 依存関係: 3, 4
@@ -55,7 +55,7 @@
   - _Requirements: 1.1, 1.2, 4.5, 5.1, 5.4, 7.2_
   - _Boundary: App Integration_
 
-- [ ] 6. 準備完了ボタンの有効条件を接続する
+- [x] 6. 準備完了ボタンの有効条件を接続する
   - 作業内容: 実カメラ時の「準備完了」を `poseDetector` 初期化済みかつ `calibrationResult.canStart` の場合だけ有効化する。
   - 変更するファイル: `src/App.tsx`
   - 依存関係: 5
@@ -64,7 +64,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 7.1, 7.4_
   - _Boundary: App Integration_
 
-- [ ] 7. 表示の揺れを抑える最小処理を追加する
+- [x] 7. 表示の揺れを抑える最小処理を追加する
   - 作業内容: 検出状態が短時間だけ揺れたときに表示が過度に点滅しないよう、必要に応じてUI側で直近の良好表示を短時間保持する。
   - 変更するファイル: `src/App.tsx` または `src/components/CalibrationPanel.tsx`
   - 依存関係: 5
@@ -73,7 +73,7 @@
   - _Requirements: 7.2, 7.3, 7.4_
   - _Boundary: UI Components, App Integration_
 
-- [ ] 8. READMEと手動確認チェックリストを更新する
+- [x] 8. READMEと手動確認チェックリストを更新する
   - 作業内容: カメラ準備時の位置合わせ、準備完了条件、確認観点をREADMEへ追記する。
   - 変更するファイル: `README.md`
   - 依存関係: 5, 6
@@ -82,21 +82,23 @@
   - _Requirements: 8.4, 8.5_
   - _Boundary: Documentation_
 
-- [ ] 9. 自動検証とE2E回帰確認を行う
+- [x] 9. 自動検証とE2E回帰確認を行う
   - 作業内容: 型チェック、ビルド、ユニットテスト、モック姿勢E2Eを実行し、既存導線の回帰がないことを確認する。
   - 変更するファイル: なし
   - 依存関係: 1-8
   - 完了条件: `npm run typecheck`, `npm run build`, `npm test`, `npm run test:e2e` が成功する。
   - 確認方法: 各コマンドの実行結果を記録し、失敗があれば修正する。
+  - 確認結果: 2026-07-10に `npm run typecheck`, `npm run build`, `npm test`, `npm run test:e2e` が成功。
   - _Requirements: 8.1, 8.2, 8.3_
   - _Boundary: Validation_
 
-- [ ] 10. 実カメラで主要状態を確認する
+- [x] 10. 実カメラで主要状態を確認する
   - 作業内容: 実カメラで、良好、近すぎる、遠すぎる、左右寄り、未検出、準備完了、リトライ、タイトル復帰を確認する。
   - 変更するファイル: 必要に応じて `README.md` または `.kiro/specs/camera-calibration/tasks.md`
   - 依存関係: 9
   - 完了条件: 主要状態が意図どおり表示され、準備完了後に既存カウントダウンとプレイへ進む。
   - 確認方法: SSHポートフォワードまたはlocalhostで実ブラウザ確認を行い、未確認項目があれば明記する。
+  - 確認結果: 2026-07-09に実カメラの主要導線を確認済み。READMEの手動確認チェックリストへ反映済み。
   - _Requirements: 1.1-1.4, 2.1-2.4, 3.1-3.5, 4.1-4.5, 5.1-5.4, 7.1-7.4, 8.4_
   - _Boundary: Manual Validation_
 

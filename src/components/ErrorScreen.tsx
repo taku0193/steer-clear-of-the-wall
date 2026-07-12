@@ -1,11 +1,13 @@
 type ErrorScreenProps = {
   message: string;
+  autoReturnSeconds: number | null;
   onRetry: () => void;
   onBackToTitle: () => void;
 };
 
 export function ErrorScreen({
   message,
+  autoReturnSeconds,
   onRetry,
   onBackToTitle,
 }: ErrorScreenProps) {
@@ -26,6 +28,10 @@ export function ErrorScreen({
           タイトルへ戻る
         </button>
       </div>
+      {autoReturnSeconds !== null && (
+        <AutoReturnCountdown seconds={autoReturnSeconds} />
+      )}
     </section>
   );
 }
+import { AutoReturnCountdown } from "./AutoReturnCountdown";

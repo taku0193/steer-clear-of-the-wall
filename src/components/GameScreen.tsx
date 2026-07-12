@@ -33,6 +33,7 @@ type GameScreenProps = {
   wallSpeedLevel: number;
   wallSpeedLabel: string;
   lastSpeedLevelUp: boolean;
+  onResetToTitle: () => void;
 };
 
 export function GameScreen({
@@ -52,6 +53,7 @@ export function GameScreen({
   wallSpeedLevel,
   wallSpeedLabel,
   lastSpeedLevelUp,
+  onResetToTitle,
 }: GameScreenProps) {
   const screenRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -233,6 +235,15 @@ export function GameScreen({
         <span className="visually-hidden">直前の判定: </span>
         {judgmentFeedback.label}
       </p>
+
+      <button
+        className="secondary-action game-reset-action"
+        type="button"
+        aria-label="プレイを終了してタイトルへ戻る"
+        onClick={onResetToTitle}
+      >
+        終了
+      </button>
     </section>
   );
 }
