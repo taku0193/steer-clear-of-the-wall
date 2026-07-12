@@ -15,6 +15,8 @@ import {
   type CanvasViewport,
 } from "../rendering/canvasViewport";
 import { advanceVisualWallProgress } from "../rendering/wallMotion";
+import { GameStatusHud } from "./GameStatusHud";
+import { JudgmentOverlay } from "./JudgmentOverlay";
 
 type GameScreenProps = {
   remainingHearts: number;
@@ -29,7 +31,6 @@ type GameScreenProps = {
   playerArea: SafeArea | null;
   activeWallPattern: WallPattern;
   wallProgress: number;
-  successfulWalls: number;
   wallSpeedLevel: number;
   wallSpeedLabel: string;
   lastSpeedLevelUp: boolean;
@@ -49,7 +50,6 @@ export function GameScreen({
   playerArea,
   activeWallPattern,
   wallProgress,
-  successfulWalls,
   wallSpeedLevel,
   wallSpeedLabel,
   lastSpeedLevelUp,
@@ -63,10 +63,17 @@ export function GameScreen({
     useState<CanvasViewport | null>(null);
   const [visualWallProgress, setVisualWallProgress] =
     useState(wallProgress);
-  const judgmentFeedback = getJudgmentFeedback(lastJudgment, lastSpeedLevelUp);
+  const [visibleJudgment, setVisibleJudgment] =
+    useState<JudgmentResult | null>(null);
   const poseStatus = getPoseStatusLabel(poseDetectionStatus);
   const inputModeLabel = poseInputMode === "camera" ? "カメラ" : "モック";
-  const heartDisplay = getHeartDisplay(remainingHearts);
+
+  useEffect(() => {
+    if (!lastJudgment) return;
+    setVisibleJudgment(lastJudgment);
+    const timerId = window.setTimeout(() => setVisibleJudgment(null), 700);
+    return () => window.clearTimeout(timerId);
+  }, [lastJudgment]);
 
   useEffect(() => {
     logicalWallProgressRef.current = wallProgress;
@@ -165,6 +172,7 @@ export function GameScreen({
       playerArea,
       wallPattern: activeWallPattern,
       wallProgress: visualWallProgress,
+      judgment: visibleJudgment,
     });
   }, [
     activeWallPattern,
@@ -175,6 +183,7 @@ export function GameScreen({
     poseFrame,
     poseInputMode,
     visualWallProgress,
+    visibleJudgment,
   ]);
 
   return (
@@ -192,34 +201,13 @@ export function GameScreen({
         aria-label="プレイヤー姿勢と壁パターンのゲーム描画"
       />
 
-      <header className="game-hud" aria-label="プレイ状況">
-        <div className="hud-item">
-          <span>ハート</span>
-          <strong
-            className="heart-readout"
-            aria-label={`残りハート${remainingHearts}個`}
-          >
-            {heartDisplay}
-          </strong>
-        </div>
-        <div className="hud-item">
-          <span>スコア</span>
-          <strong>{score}</strong>
-        </div>
-        <div className="hud-item">
-          <span>ミス</span>
-          <strong>{misses}</strong>
-        </div>
-        <div className="hud-item">
-          <span>速度</span>
-          <strong
-            className="speed-readout"
-            aria-label={`速度レベル${wallSpeedLevel}、${wallSpeedLabel}、クリア${successfulWalls}枚`}
-          >
-            Lv.{wallSpeedLevel}
-          </strong>
-        </div>
-      </header>
+      <GameStatusHud
+        remainingHearts={remainingHearts}
+        score={score}
+        misses={misses}
+        wallSpeedLevel={wallSpeedLevel}
+        wallSpeedLabel={wallSpeedLabel}
+      />
 
       <p
         className={`pose-status pose-status-${poseDetectionStatus}`}
@@ -228,13 +216,10 @@ export function GameScreen({
         {inputModeLabel} / {poseStatus}
       </p>
 
-      <p
-        className={`judgment-feedback judgment-feedback-${judgmentFeedback.status}`}
-        aria-live="polite"
-      >
-        <span className="visually-hidden">直前の判定: </span>
-        {judgmentFeedback.label}
-      </p>
+      <JudgmentOverlay
+        judgment={visibleJudgment}
+        speedLevelUp={lastSpeedLevelUp}
+      />
 
       <button
         className="secondary-action game-reset-action"
@@ -274,46 +259,4 @@ function getPoseStatusLabel(status: PoseDetectionStatus): string {
     case "notDetected":
       return "全身を検出できません";
   }
-}
-
-function getHeartDisplay(remainingHearts: number): string {
-  const heartCount = Math.min(Math.max(Math.trunc(remainingHearts), 0), 5);
-
-  return "♥".repeat(heartCount) + "♡".repeat(5 - heartCount);
-}
-
-type JudgmentFeedback = {
-  label: string;
-  status: "pending" | "success" | "miss" | "not-detected";
-};
-
-function getJudgmentFeedback(
-  judgment: JudgmentResult | null,
-  speedLevelUp: boolean,
-): JudgmentFeedback {
-  if (!judgment) {
-    return {
-      label: "判定待ち",
-      status: "pending",
-    };
-  }
-
-  if (judgment.type === "success") {
-    return {
-      label: speedLevelUp ? "成功 / 速度アップ" : "成功",
-      status: "success",
-    };
-  }
-
-  if (judgment.type === "miss") {
-    return {
-      label: "失敗（安全領域からはみ出しています）",
-      status: "miss",
-    };
-  }
-
-  return {
-    label: "判定不能（姿勢を検出できません）",
-    status: "not-detected",
-  };
 }

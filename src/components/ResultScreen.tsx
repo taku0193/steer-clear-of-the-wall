@@ -25,26 +25,27 @@ export function ResultScreen({
     <section className="screen-panel result-screen" aria-labelledby="result-title">
       <p className="eyebrow">Result</p>
       <h1 id="result-title">結果</h1>
-      <p className="summary">ハートがなくなりました。今回のプレイ結果です。</p>
-      <div className="result-stats" aria-label="今回の結果">
-        <p className="score-readout">
+      <div className="result-summary" aria-label="今回の結果">
+        <p className="result-score-hero">
           <span>最終スコア</span>
           <strong>{finalScore}</strong>
         </p>
-        <p className="score-readout">
-          <span>クリア枚数</span>
-          <strong>{successfulWalls}</strong>
-        </p>
-        <p className="score-readout">
-          <span>最高速度</span>
-          <strong aria-label={`最高速度レベル${wallSpeedLevel}、${wallSpeedLabel}`}>
-            Lv.{wallSpeedLevel}
-          </strong>
-        </p>
-        <p className="score-readout">
-          <span>ミス数</span>
-          <strong>{misses}</strong>
-        </p>
+        <div className="result-stats">
+          <p className="score-readout">
+            <span>クリア枚数</span>
+            <strong>{successfulWalls}</strong>
+          </p>
+          <p className="score-readout">
+            <span>最高速度</span>
+            <strong aria-label={`最高速度レベル${wallSpeedLevel}、${wallSpeedLabel}`}>
+              Lv.{wallSpeedLevel}
+            </strong>
+          </p>
+          <p className="score-readout">
+            <span>ミス数</span>
+            <strong>{misses}</strong>
+          </p>
+        </div>
       </div>
       <div className="screen-actions result-actions">
         <button className="primary-action" type="button" onClick={onRestart}>
