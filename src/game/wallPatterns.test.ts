@@ -5,71 +5,36 @@ import {
   WALL_PATTERNS,
 } from "./wallPatterns";
 
-const REQUIRED_EXISTING_PATTERN_IDS = [
+const REQUIRED_PATTERN_IDS = [
   "center-gap",
   "left-gap",
   "right-gap",
   "crouch-low",
-  "deep-crouch",
   "left-low",
   "right-low",
-  "narrow-center",
-  "wide-low",
-] as const;
-
-const ADDED_PATTERN_IDS = [
-  "jump-center",
-  "jump-left",
-  "jump-right",
-  "high-narrow",
-  "tiny-hop",
-  "hell-left-low",
-  "hell-right-low",
-  "hell-left-high",
-  "hell-right-high",
-  "needle-center",
-  "floor-scrape",
-  "corner-left",
-  "corner-right",
-  "high-center-tight",
-] as const;
-
-const BOTTOM_OPEN_PATTERN_IDS = [
-  "center-gap",
-  "left-gap",
-  "right-gap",
-  "crouch-low",
-  "deep-crouch",
-  "left-low",
-  "right-low",
-  "narrow-center",
-  "wide-low",
+  "arms-wide",
+  "hands-up",
+  "side-step-left",
+  "side-step-right",
 ] as const;
 
 describe("WALL_PATTERNS", () => {
-  it("既存パターンを削除せずに保持している", () => {
+  it("立位・横移動・しゃがみ・腕のポーズを提供する", () => {
     const ids = WALL_PATTERNS.map((pattern) => pattern.id);
-
-    for (const id of REQUIRED_EXISTING_PATTERN_IDS) {
-      expect(ids).toContain(id);
-    }
+    for (const id of REQUIRED_PATTERN_IDS) expect(ids).toContain(id);
   });
 
-  it("ジャンプ系と高難易度パターンを持つ", () => {
-    const ids = WALL_PATTERNS.map((pattern) => pattern.id);
-
-    for (const id of ADDED_PATTERN_IDS) {
-      expect(ids).toContain(id);
-    }
+  it("床に倒れ込む姿勢や意図が伝わらない名称を持たない", () => {
+    const unsafeWords = /伏せ|床すれすれ|鬼畜|針/;
+    for (const pattern of WALL_PATTERNS) expect(pattern.name).not.toMatch(unsafeWords);
   });
 
-  it("各パターンのIDは一意で、安全領域とスコア値が有効である", () => {
-    const ids = new Set(WALL_PATTERNS.map((pattern) => pattern.id));
-
-    expect(ids.size).toBe(WALL_PATTERNS.length);
+  it("各パターンのID、外接領域、スコアが有効である", () => {
+    expect(new Set(WALL_PATTERNS.map((pattern) => pattern.id)).size).toBe(
+      WALL_PATTERNS.length,
+    );
 
     for (const pattern of WALL_PATTERNS) {
-      expect(pattern.name.length).toBeGreaterThan(0);
       expect(pattern.verticalAnchor).toBe("top");
       expect(pattern.scoreValue).toBeGreaterThan(0);
       expect(pattern.safeArea.x).toBeGreaterThanOrEqual(0);
@@ -78,83 +43,58 @@ describe("WALL_PATTERNS", () => {
       expect(pattern.safeArea.height).toBeGreaterThan(0);
       expect(pattern.safeArea.x + pattern.safeArea.width).toBeLessThanOrEqual(1);
       expect(pattern.safeArea.y + pattern.safeArea.height).toBeLessThanOrEqual(1);
-    }
-  });
-
-  it("複合形状を持つパターンのゾーンは正規化範囲内でIDが一意である", () => {
-    const shapedPatterns = WALL_PATTERNS.filter((pattern) => pattern.safeShape);
-
-    expect(shapedPatterns.length).toBeGreaterThan(0);
-
-    for (const pattern of shapedPatterns) {
-      const zones = pattern.safeShape?.zones ?? [];
-      const zoneIds = new Set(zones.map((zone) => zone.id));
-
-      expect(zoneIds.size).toBe(zones.length);
-
-      for (const zone of zones) {
-        if (zone.type === "rect") {
-          expect(zone.x).toBeGreaterThanOrEqual(0);
-          expect(zone.y).toBeGreaterThanOrEqual(0);
-          expect(zone.width).toBeGreaterThan(0);
-          expect(zone.height).toBeGreaterThan(0);
-          expect(zone.x + zone.width).toBeLessThanOrEqual(1);
-          expect(zone.y + zone.height).toBeLessThanOrEqual(1);
-        }
-
-        if (zone.type === "ellipse") {
-          expect(zone.cx).toBeGreaterThanOrEqual(0);
-          expect(zone.cy).toBeGreaterThanOrEqual(0);
-          expect(zone.cx).toBeLessThanOrEqual(1);
-          expect(zone.cy).toBeLessThanOrEqual(1);
-          expect(zone.rx).toBeGreaterThan(0);
-          expect(zone.ry).toBeGreaterThan(0);
-        }
-
-        if (zone.type === "capsule") {
-          expect(zone.x1).toBeGreaterThanOrEqual(0);
-          expect(zone.y1).toBeGreaterThanOrEqual(0);
-          expect(zone.x2).toBeGreaterThanOrEqual(0);
-          expect(zone.y2).toBeGreaterThanOrEqual(0);
-          expect(zone.x1).toBeLessThanOrEqual(1);
-          expect(zone.y1).toBeLessThanOrEqual(1);
-          expect(zone.x2).toBeLessThanOrEqual(1);
-          expect(zone.y2).toBeLessThanOrEqual(1);
-          expect(zone.radius).toBeGreaterThan(0);
-        }
-
-        if (zone.type === "polygon") {
-          expect(zone.points.length).toBeGreaterThanOrEqual(3);
-
-          for (const point of zone.points) {
-            expect(point.x).toBeGreaterThanOrEqual(0);
-            expect(point.y).toBeGreaterThanOrEqual(0);
-            expect(point.x).toBeLessThanOrEqual(1);
-            expect(point.y).toBeLessThanOrEqual(1);
-          }
-        }
+      expect(pattern.safeArea.height).toBeLessThanOrEqual(0.92);
+      if (pattern.id === "small-jump") {
+        expect(pattern.safeArea.y + pattern.safeArea.height).toBeLessThan(1);
+      } else {
+        expect(pattern.safeArea.y + pattern.safeArea.height).toBeCloseTo(1);
       }
     }
   });
 
-  it("下端まで開く設計の安全領域は壁の下端まで届いている", () => {
-    for (const id of BOTTOM_OPEN_PATTERN_IDS) {
-      const pattern = getWallPatternById(id);
-
-      expect(
-        pattern.safeArea.y + pattern.safeArea.height,
-      ).toBeCloseTo(1);
+  it("動作に必要な場合だけ横幅を広く取る", () => {
+    for (const pattern of WALL_PATTERNS) {
+      if (pattern.id === "arms-wide") {
+        expect(pattern.safeArea.width).toBeGreaterThan(0.6);
+      } else if (pattern.id.includes("seat")) {
+        expect(pattern.safeArea.width).toBeLessThanOrEqual(0.4);
+        expect(pattern.safeArea.height).toBeLessThanOrEqual(0.4);
+      } else if (
+        pattern.id.includes("low") ||
+        pattern.id === "wide-stance"
+      ) {
+        expect(pattern.safeArea.width).toBeLessThanOrEqual(0.65);
+      } else if (pattern.id === "small-jump") {
+        expect(pattern.safeArea.width).toBeLessThanOrEqual(0.5);
+      } else if (pattern.id.includes("lean")) {
+        expect(pattern.safeArea.width).toBeLessThanOrEqual(0.5);
+      } else {
+        expect(pattern.safeArea.width).toBeLessThanOrEqual(0.45);
+      }
     }
   });
 
-  it("ID検索で該当パターンを返し、不明なIDでは先頭を返す", () => {
-    expect(getWallPatternById("right-gap").id).toBe("right-gap");
-    expect(getWallPatternById("unknown").id).toBe(WALL_PATTERNS[0].id);
+  it("すべての穴が動作に合わせた単一の連続ポリゴンである", () => {
+    for (const pattern of WALL_PATTERNS) {
+      const zones = pattern.safeShape?.zones ?? [];
+      expect(zones).toHaveLength(1);
+      expect(zones[0]?.type).toBe("polygon");
+      if (zones[0]?.type !== "polygon") continue;
+      expect(zones[0].points.length).toBeGreaterThanOrEqual(8);
+      const bottom = Math.max(...zones[0].points.map((point) => point.y));
+      expect(bottom).toBe(pattern.id === "small-jump" ? 0.7 : 1);
+      for (const point of zones[0].points) {
+        expect(point.x).toBeGreaterThanOrEqual(0);
+        expect(point.x).toBeLessThanOrEqual(1);
+        expect(point.y).toBeGreaterThanOrEqual(0);
+        expect(point.y).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
-  it("インデックス検索はパターン数で循環する", () => {
-    expect(getWallPatternByIndex(WALL_PATTERNS.length).id).toBe(
-      WALL_PATTERNS[0].id,
-    );
+  it("ID検索とインデックス検索がフォールバック・循環する", () => {
+    expect(getWallPatternById("right-gap").id).toBe("right-gap");
+    expect(getWallPatternById("unknown").id).toBe(WALL_PATTERNS[0].id);
+    expect(getWallPatternByIndex(WALL_PATTERNS.length).id).toBe(WALL_PATTERNS[0].id);
   });
 });
