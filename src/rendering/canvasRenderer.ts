@@ -1,5 +1,6 @@
 import type {
   AvatarStyle,
+  JudgmentResult,
   MockPose,
   PoseInputMode,
   SafeArea,
@@ -30,6 +31,9 @@ type CanvasRenderInput = {
   playerArea: SafeArea | null;
   wallPattern: WallPattern;
   wallProgress: number;
+  judgment?: JudgmentResult | null;
+  previewPose?: AvatarPose;
+  showPlayerArea?: boolean;
 };
 
 type Rect = {
@@ -90,6 +94,7 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
   drawBackground(context, width, height);
   drawDepthGuide(context, width, height, input.wallProgress);
   drawWall(context, wallRect, input.wallPattern);
+  drawJudgmentFrame(context, width, height, input.judgment);
 
   if (input.poseInputMode === "camera") {
     if (input.poseFrame?.detected) {
@@ -119,14 +124,32 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
     height,
     input.mockPose.bodyArea,
   );
-  drawPlayerArea(context, mockPoseRect);
+  if (input.showPlayerArea !== false) {
+    drawPlayerArea(context, mockPoseRect);
+  }
   drawAvatar(
     context,
-    createMockAvatarPose(mockPoseRect),
+    input.previewPose ?? createMockAvatarPose(mockPoseRect),
     width,
     height,
     input.avatarStyle,
   );
+}
+
+function drawJudgmentFrame(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  judgment: JudgmentResult | null | undefined,
+) {
+  if (!judgment) return;
+
+  context.save();
+  context.strokeStyle =
+    judgment.type === "success" ? "rgba(70, 240, 196, 0.88)" : "rgba(255, 93, 104, 0.9)";
+  context.lineWidth = 8;
+  context.strokeRect(4, 4, width - 8, height - 8);
+  context.restore();
 }
 
 function getCanvasRect(canvasWidth: number, canvasHeight: number, area: SafeArea): Rect {
@@ -148,14 +171,19 @@ function getNestedRect(parent: Rect, area: SafeArea): Rect {
 }
 
 function drawBackground(context: CanvasRenderingContext2D, width: number, height: number) {
-  const gradient = context.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#111827");
-  gradient.addColorStop(1, "#172321");
-
-  context.fillStyle = gradient;
+  context.fillStyle = "#080b0d";
   context.fillRect(0, 0, width, height);
 
-  context.strokeStyle = "rgba(247, 247, 242, 0.1)";
+  context.fillStyle = "#11171a";
+  context.beginPath();
+  context.moveTo(0, height);
+  context.lineTo(width * 0.38, height * 0.48);
+  context.lineTo(width * 0.62, height * 0.48);
+  context.lineTo(width, height);
+  context.closePath();
+  context.fill();
+
+  context.strokeStyle = "rgba(70, 240, 196, 0.1)";
   context.lineWidth = 1;
   context.strokeRect(0.5, 0.5, width - 1, height - 1);
 }
@@ -169,7 +197,7 @@ function drawDepthGuide(
   const progress = Math.max(0, Math.min(wallProgress, 1));
   const inset = 22 + progress * 30;
 
-  context.strokeStyle = "rgba(52, 211, 153, 0.18)";
+  context.strokeStyle = "rgba(32, 184, 230, 0.22)";
   context.lineWidth = 2;
   context.beginPath();
   context.moveTo(inset, inset);
@@ -187,7 +215,7 @@ function drawWall(
   wallPattern: WallPattern,
 ) {
   context.save();
-  context.fillStyle = "rgba(248, 113, 113, 0.72)";
+  context.fillStyle = "rgba(255, 93, 104, 0.78)";
   context.fillRect(wallRect.x, wallRect.y, wallRect.width, wallRect.height);
 
   context.globalCompositeOperation = "destination-out";
@@ -201,10 +229,10 @@ function drawWall(
   context.strokeRect(wallRect.x, wallRect.y, wallRect.width, wallRect.height);
 
   context.save();
-  context.fillStyle = "rgba(52, 211, 153, 0.26)";
+  context.fillStyle = "rgba(70, 240, 196, 0.28)";
   drawSafeAreaPath(context, wallRect, wallPattern);
   context.fill();
-  context.strokeStyle = "#34d399";
+  context.strokeStyle = "#46f0c4";
   context.lineWidth = wallPattern.safeShape ? 5 : 4;
   context.lineJoin = "round";
   context.lineCap = "round";

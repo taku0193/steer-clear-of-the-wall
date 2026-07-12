@@ -5,6 +5,7 @@ import { startCamera, stopCamera } from "./camera/camera";
 import { AvatarStyleSelector } from "./components/AvatarStyleSelector";
 import { CalibrationPanel } from "./components/CalibrationPanel";
 import { CameraPreview } from "./components/CameraPreview";
+import { CountdownScreen } from "./components/CountdownScreen";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
@@ -420,7 +421,7 @@ export function App() {
 
   if (gameState.phase === "title") {
     return (
-      <main className="app-shell">
+      <main className="app-shell app-shell-title">
         <TitleScreen onStart={handleStartGame} />
       </main>
     );
@@ -509,31 +510,20 @@ export function App() {
 
   if (gameState.phase === "countdown") {
     return (
-      <main className="app-shell" aria-labelledby="countdown-title">
-        <section className="screen-panel countdown-screen" aria-live="polite">
-          {cameraStream && (
-            <CameraPreview
-              stream={cameraStream}
-              onVideoElementChange={setPoseVideoElement}
-              visuallyHidden
-            />
-          )}
-          <p className="eyebrow">Countdown</p>
-          <h1 id="countdown-title">まもなく開始</h1>
-          <p className="countdown-number" aria-label={`開始まで${countdownValue}秒`}>
-            {countdownValue}
-          </p>
-          <p className="summary">
-            カウントダウン中です。壁との判定はまだ始まりません。
-          </p>
-          <button
-            className="secondary-action exhibition-reset-action"
-            type="button"
-            onClick={handleReturnToTitle}
-          >
-            タイトルへ戻る
-          </button>
-        </section>
+      <main className="app-shell app-shell-countdown" aria-labelledby="countdown-title">
+        {cameraStream && (
+          <CameraPreview
+            stream={cameraStream}
+            onVideoElementChange={setPoseVideoElement}
+            visuallyHidden
+          />
+        )}
+        <CountdownScreen
+          value={countdownValue}
+          avatarStyle={gameState.avatarStyle}
+          wallPattern={getWallPatternById(gameState.activeWallPatternId)}
+          onBackToTitle={handleReturnToTitle}
+        />
       </main>
     );
   }
@@ -563,7 +553,6 @@ export function App() {
           playerArea={gameState.playerArea}
           activeWallPattern={activeWallPattern}
           wallProgress={gameState.wallProgress}
-          successfulWalls={gameState.successfulWalls}
           wallSpeedLevel={gameState.wallSpeedLevel}
           wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
           lastSpeedLevelUp={gameState.lastSpeedLevelUp}

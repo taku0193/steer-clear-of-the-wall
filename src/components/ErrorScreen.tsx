@@ -13,7 +13,8 @@ export function ErrorScreen({
 }: ErrorScreenProps) {
   return (
     <section className="screen-panel error-screen" aria-labelledby="error-title">
-      <p className="eyebrow">Error</p>
+      <p className="error-symbol" aria-hidden="true">!</p>
+      <p className="eyebrow">System Check</p>
       <h1 id="error-title">ゲームを開始できません</h1>
       <p className="summary">{message}</p>
       <div className="screen-actions">

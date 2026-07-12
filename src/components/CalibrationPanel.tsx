@@ -32,6 +32,9 @@ export function CalibrationPanel({
             key={check.id}
             className={`calibration-check calibration-check-${check.status}`}
           >
+            <span className="calibration-check-mark" aria-hidden="true">
+              {getCheckMark(check.status)}
+            </span>
             <span className="calibration-check-label">{check.label}</span>
             <strong>{getCheckStatusLabel(check.status)}</strong>
             <span>{check.message}</span>
@@ -40,6 +43,19 @@ export function CalibrationPanel({
       </ul>
     </section>
   );
+}
+
+function getCheckMark(
+  status: CalibrationResult["checks"][number]["status"],
+): string {
+  switch (status) {
+    case "pass":
+      return "✓";
+    case "warn":
+      return "!";
+    case "fail":
+      return "×";
+  }
 }
 
 function getStatusLabel(status: CalibrationResult["status"]): string {
