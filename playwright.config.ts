@@ -16,6 +16,9 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      RANKING_DATABASE_PATH: "./test-results/e2e-ranking.db",
+    },
   },
   projects: [
     {

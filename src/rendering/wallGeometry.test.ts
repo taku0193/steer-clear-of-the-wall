@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateWallRect } from "./wallGeometry";
+import { applyWallPass, calculateWallRect } from "./wallGeometry";
 
 describe("calculateWallRect", () => {
   it("top配置は進行中も壁上端をCanvas上端へ固定する", () => {
@@ -44,5 +44,16 @@ describe("calculateWallRect", () => {
     expect(calculateWallRect(1000, 600, 2, "ground")).toEqual(
       calculateWallRect(1000, 600, 1, "ground"),
     );
+  });
+});
+
+describe("applyWallPass", () => {
+  it("通過進行に応じて中心を維持したまま壁を拡大する", () => {
+    const rect = { x: 100, y: 50, width: 400, height: 300 };
+    const passed = applyWallPass(rect, 1);
+    expect(passed.width).toBeGreaterThan(rect.width);
+    expect(passed.height).toBeGreaterThan(rect.height);
+    expect(passed.x + passed.width / 2).toBeCloseTo(rect.x + rect.width / 2);
+    expect(passed.y + passed.height / 2).toBeCloseTo(rect.y + rect.height / 2);
   });
 });

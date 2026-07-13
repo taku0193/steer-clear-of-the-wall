@@ -20,7 +20,9 @@ import {
   type CanvasPoint,
 } from "./avatarGeometry";
 import type { CanvasViewport } from "./canvasViewport";
-import { calculateWallRect } from "./wallGeometry";
+import { calculateGameViewport } from "./gameViewport";
+import type { GameViewport } from "./gameViewport";
+import { applyWallPass, calculateWallRect } from "./wallGeometry";
 
 type CanvasRenderInput = {
   viewport: CanvasViewport;
@@ -34,6 +36,10 @@ type CanvasRenderInput = {
   judgment?: JudgmentResult | null;
   previewPose?: AvatarPose;
   showPlayerArea?: boolean;
+  previewMotion?: {
+    passProgress: number;
+    successPulse: number;
+  };
 };
 
 type Rect = {
@@ -75,12 +81,16 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
 
   const width = viewport.cssWidth;
   const height = viewport.cssHeight;
-  const wallRect = calculateWallRect(
-    width,
-    height,
+  const gameViewport = calculateGameViewport(width, height);
+  if (!gameViewport) return;
+  const baseWallRect = calculateWallRect(
+    gameViewport.gameWidth,
+    gameViewport.gameHeight,
     input.wallProgress,
     input.wallPattern.verticalAnchor,
   );
+  const passProgress = input.previewMotion?.passProgress ?? 0;
+  const wallRect = applyWallPass(baseWallRect, passProgress);
 
   context.setTransform(
     viewport.pixelRatio,
@@ -91,48 +101,138 @@ export function renderGameCanvas(canvas: HTMLCanvasElement, input: CanvasRenderI
     0,
   );
   context.clearRect(0, 0, width, height);
-  drawBackground(context, width, height);
-  drawDepthGuide(context, width, height, input.wallProgress);
-  drawWall(context, wallRect, input.wallPattern);
-  drawJudgmentFrame(context, width, height, input.judgment);
+  drawBackground(context, width, height, gameViewport);
+  context.save();
+  context.translate(gameViewport.gameX, gameViewport.gameY);
+  drawDepthGuide(
+    context,
+    gameViewport.gameWidth,
+    gameViewport.gameHeight,
+    input.wallProgress,
+  );
+  drawWall(
+    context,
+    wallRect,
+    input.wallPattern,
+    Math.max(0, 1 - passProgress * 0.88),
+    input.previewMotion?.successPulse ?? 0,
+  );
 
   if (input.poseInputMode === "camera") {
     if (input.poseFrame?.detected) {
       if (input.playerArea) {
         drawPlayerArea(
           context,
-          getCanvasRect(width, height, input.playerArea),
+          getCanvasRect(
+            gameViewport.gameWidth,
+            gameViewport.gameHeight,
+            input.playerArea,
+          ),
         );
       }
 
       drawAvatar(
         context,
-        projectPoseLandmarks(input.poseFrame, width, height),
-        width,
-        height,
+        projectPoseLandmarks(
+          input.poseFrame,
+          gameViewport.gameWidth,
+          gameViewport.gameHeight,
+        ),
+        gameViewport.gameWidth,
+        gameViewport.gameHeight,
         input.avatarStyle,
       );
     } else {
-      drawPoseNotDetected(context, width, height);
+      drawPoseNotDetected(
+        context,
+        gameViewport.gameWidth,
+        gameViewport.gameHeight,
+      );
     }
-
-    return;
+  } else {
+    const mockPoseRect = getCanvasRect(
+      gameViewport.gameWidth,
+      gameViewport.gameHeight,
+      input.mockPose.bodyArea,
+    );
+    if (input.showPlayerArea !== false) {
+      drawPlayerArea(context, mockPoseRect);
+    }
+    drawAvatar(
+      context,
+      input.previewPose ?? createMockAvatarPose(mockPoseRect),
+      gameViewport.gameWidth,
+      gameViewport.gameHeight,
+      input.avatarStyle,
+    );
   }
-
-  const mockPoseRect = getCanvasRect(
-    width,
-    height,
-    input.mockPose.bodyArea,
+  context.restore();
+  drawCollisionPoints(
+    context,
+    gameViewport.gameWidth,
+    gameViewport.gameHeight,
+    input.judgment,
   );
-  if (input.showPlayerArea !== false) {
-    drawPlayerArea(context, mockPoseRect);
+  drawJudgmentFrame(context, width, height, input.judgment);
+}
+
+function drawCollisionPoints(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  judgment: JudgmentResult | null | undefined,
+) {
+  if (judgment?.type !== "miss" || !judgment.outsidePoints) return;
+  context.save();
+  context.translate(
+    (context.canvas.width / (context.getTransform().a || 1) - width) / 2,
+    (context.canvas.height / (context.getTransform().d || 1) - height) / 2,
+  );
+  context.strokeStyle = "#ff5d68";
+  context.fillStyle = "rgba(255, 93, 104, 0.2)";
+  context.lineWidth = 3;
+  for (const point of judgment.outsidePoints) {
+    const x = point.x * width;
+    const y = point.y * height;
+    context.beginPath();
+    context.arc(x, y, 15, 0, Math.PI * 2);
+    context.fill();
+    context.beginPath();
+    context.moveTo(x - 7, y - 7);
+    context.lineTo(x + 7, y + 7);
+    context.moveTo(x + 7, y - 7);
+    context.lineTo(x - 7, y + 7);
+    context.stroke();
   }
+  context.restore();
+}
+
+export function renderAvatarPreviewCanvas(
+  canvas: HTMLCanvasElement,
+  viewport: CanvasViewport,
+  avatarStyle: AvatarStyle,
+) {
+  if (canvas.width !== viewport.bitmapWidth) canvas.width = viewport.bitmapWidth;
+  if (canvas.height !== viewport.bitmapHeight) canvas.height = viewport.bitmapHeight;
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
+  context.setTransform(viewport.pixelRatio, 0, 0, viewport.pixelRatio, 0, 0);
+  context.clearRect(0, 0, viewport.cssWidth, viewport.cssHeight);
+  context.fillStyle = "#11171a";
+  context.fillRect(0, 0, viewport.cssWidth, viewport.cssHeight);
+  const bodyRect = {
+    x: viewport.cssWidth * 0.32,
+    y: viewport.cssHeight * 0.08,
+    width: viewport.cssWidth * 0.36,
+    height: viewport.cssHeight * 0.84,
+  };
   drawAvatar(
     context,
-    input.previewPose ?? createMockAvatarPose(mockPoseRect),
-    width,
-    height,
-    input.avatarStyle,
+    createMockAvatarPose(bodyRect),
+    viewport.cssWidth,
+    viewport.cssHeight,
+    avatarStyle,
   );
 }
 
@@ -170,16 +270,30 @@ function getNestedRect(parent: Rect, area: SafeArea): Rect {
   };
 }
 
-function drawBackground(context: CanvasRenderingContext2D, width: number, height: number) {
+function drawBackground(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  gameViewport: GameViewport,
+) {
   context.fillStyle = "#080b0d";
   context.fillRect(0, 0, width, height);
 
   context.fillStyle = "#11171a";
   context.beginPath();
-  context.moveTo(0, height);
-  context.lineTo(width * 0.38, height * 0.48);
-  context.lineTo(width * 0.62, height * 0.48);
-  context.lineTo(width, height);
+  context.moveTo(gameViewport.gameX, gameViewport.gameY + gameViewport.gameHeight);
+  context.lineTo(
+    gameViewport.gameX + gameViewport.gameWidth * 0.38,
+    gameViewport.gameY + gameViewport.gameHeight * 0.48,
+  );
+  context.lineTo(
+    gameViewport.gameX + gameViewport.gameWidth * 0.62,
+    gameViewport.gameY + gameViewport.gameHeight * 0.48,
+  );
+  context.lineTo(
+    gameViewport.gameX + gameViewport.gameWidth,
+    gameViewport.gameY + gameViewport.gameHeight,
+  );
   context.closePath();
   context.fill();
 
@@ -213,8 +327,11 @@ function drawWall(
   context: CanvasRenderingContext2D,
   wallRect: Rect,
   wallPattern: WallPattern,
+  opacity: number,
+  successPulse: number,
 ) {
   context.save();
+  context.globalAlpha = opacity;
   context.fillStyle = "rgba(255, 93, 104, 0.78)";
   context.fillRect(wallRect.x, wallRect.y, wallRect.width, wallRect.height);
 
@@ -224,6 +341,8 @@ function drawWall(
   context.fill();
   context.restore();
 
+  context.save();
+  context.globalAlpha = opacity;
   context.strokeStyle = "rgba(255, 255, 255, 0.58)";
   context.lineWidth = 3;
   context.strokeRect(wallRect.x, wallRect.y, wallRect.width, wallRect.height);
@@ -233,10 +352,12 @@ function drawWall(
   drawSafeAreaPath(context, wallRect, wallPattern);
   context.fill();
   context.strokeStyle = "#46f0c4";
-  context.lineWidth = wallPattern.safeShape ? 5 : 4;
+  context.lineWidth =
+    (wallPattern.safeShape ? 5 : 4) + Math.max(0, successPulse) * 8;
   context.lineJoin = "round";
   context.lineCap = "round";
   context.stroke();
+  context.restore();
   context.restore();
 }
 

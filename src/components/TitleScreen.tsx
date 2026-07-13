@@ -1,8 +1,19 @@
+import { NicknameInput } from "./ranking/NicknameInput";
+import { TitleGamePreview } from "./TitleGamePreview";
+
 type TitleScreenProps = {
-  onStart: () => void;
+  nickname: string;
+  onNicknameChange: (value: string) => void;
+  onStart: (nickname: string) => void;
+  onOpenRanking: () => void;
 };
 
-export function TitleScreen({ onStart }: TitleScreenProps) {
+export function TitleScreen({
+  nickname,
+  onNicknameChange,
+  onStart,
+  onOpenRanking,
+}: TitleScreenProps) {
   return (
     <section className="title-screen" aria-labelledby="app-title">
       <TitleGamePreview cyclePatterns />
@@ -11,12 +22,18 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
         <p className="eyebrow">Full Body Arcade</p>
         <h1 id="app-title">Steer Clear<br />of the Wall</h1>
         <p className="summary">迫る壁を、全身でかわそう。</p>
-        <button className="primary-action title-start-action" type="button" onClick={onStart}>
-          ゲーム開始
-        </button>
+        <NicknameInput
+          value={nickname}
+          onChange={onNicknameChange}
+          onSubmit={onStart}
+        />
+        <div className="title-actions">
+          <button className="secondary-action" type="button" onClick={onOpenRanking}>
+            ランキング
+          </button>
+        </div>
       </div>
       <p className="title-mode-note">Camera & Pose Detection</p>
     </section>
   );
 }
-import { TitleGamePreview } from "./TitleGamePreview";

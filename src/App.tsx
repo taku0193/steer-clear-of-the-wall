@@ -1,15 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useGameAudio } from "./audio/useGameAudio";
+import { AudioController } from "./components/AudioController";
+import { AudioControls } from "./components/AudioControls";
+import { AudioProvider } from "./components/AudioProvider";
 import { startCamera, stopCamera } from "./camera/camera";
 import { AvatarStyleSelector } from "./components/AvatarStyleSelector";
 import { CalibrationPanel } from "./components/CalibrationPanel";
 import { CameraPreview } from "./components/CameraPreview";
+import { CameraAlignmentOverlay } from "./components/CameraAlignmentOverlay";
 import { CountdownScreen } from "./components/CountdownScreen";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
+import { RankingOverlay } from "./components/ranking/RankingOverlay";
+import type { RankingSubmissionStatus } from "./components/ranking/ResultSubmissionStatus";
 import {
   evaluateCalibration,
   type CalibrationResult,
@@ -42,11 +49,21 @@ import type {
   PoseDetectorAdapter,
   PoseFrame,
 } from "./pose/poseTypes";
+import type { RankingEntry } from "./ranking/rankingTypes";
 
 const COUNTDOWN_START = 3;
 const CALIBRATION_READY_HOLD_MS = 600;
 
 export function App() {
+  return (
+    <AudioProvider>
+      <GameApp />
+    </AudioProvider>
+  );
+}
+
+function GameApp() {
+  const audio = useGameAudio();
   const [gameState, setGameState] = useState(createInitialGameState);
   const [countdownValue, setCountdownValue] = useState(COUNTDOWN_START);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -60,11 +77,19 @@ export function App() {
     useState<CalibrationResult | null>(null);
   const [poseVideoElement, setPoseVideoElement] =
     useState<HTMLVideoElement | null>(null);
+  const [rankingDisplayName, setRankingDisplayName] = useState("");
+  const [rankingOverlayOpen, setRankingOverlayOpen] = useState(false);
+  const [resultSubmissionStatus, setResultSubmissionStatus] =
+    useState<RankingSubmissionStatus>("idle");
+  const [submissionId, setSubmissionId] = useState(createRankingSubmissionId);
+  const [highlightedRankingEntryId, setHighlightedRankingEntryId] =
+    useState<string | null>(null);
   const resourceSessionRef = useRef(0);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const poseDetectorRef = useRef<PoseDetectorAdapter | null>(null);
   const calibrationReadyHoldStartedAtRef = useRef<number | null>(null);
   const gamePhaseRef = useRef(gameState.phase);
+  gamePhaseRef.current = gameState.phase;
 
   const releaseMediaResources = useCallback((updateState = true) => {
     resourceSessionRef.current += 1;
@@ -96,16 +121,18 @@ export function App() {
   }, [releaseMediaResources]);
 
   useEffect(() => {
-    gamePhaseRef.current = gameState.phase;
-  }, [gameState.phase]);
-
-  useEffect(() => {
     if (gameState.phase === "result" || gameState.phase === "error") {
       releaseMediaResources();
     }
   }, [gameState.phase, releaseMediaResources]);
 
   useEffect(() => {
+    if (
+      gameState.phase === "result" &&
+      (resultSubmissionStatus !== "success" || rankingOverlayOpen)
+    ) {
+      return;
+    }
     const delayMs = getAutoReturnDelayMs(gameState.phase, {
       hasActiveCamera: Boolean(cameraStream),
     });
@@ -122,7 +149,13 @@ export function App() {
     }, delayMs);
 
     return () => window.clearTimeout(timerId);
-  }, [cameraStream, gameState.phase, releaseMediaResources]);
+  }, [
+    cameraStream,
+    gameState.phase,
+    rankingOverlayOpen,
+    releaseMediaResources,
+    resultSubmissionStatus,
+  ]);
 
   useEffect(() => {
     if (
@@ -321,11 +354,22 @@ export function App() {
     return () => window.clearTimeout(timerId);
   }, [autoStartState, startCountdownFromPreparation]);
 
-  function handleStartGame() {
+  async function confirmAudioInteraction() {
+    await audio.unlockAudio();
+    audio.stopEffects();
+    audio.playEffect("confirm");
+  }
+
+  async function handleStartGame(nickname: string) {
+    await confirmAudioInteraction();
+    setRankingDisplayName(nickname);
+    setSubmissionId(createRankingSubmissionId());
+    setResultSubmissionStatus("idle");
     resetGameSession("preparing");
   }
 
   async function handleStartCamera() {
+    await confirmAudioInteraction();
     releaseMediaResources();
     const resourceSession = resourceSessionRef.current;
     setIsCameraStarting(true);
@@ -387,7 +431,8 @@ export function App() {
     }));
   }
 
-  function handleUseMockPose() {
+  async function handleUseMockPose() {
+    await confirmAudioInteraction();
     releaseMediaResources();
     setCountdownValue(COUNTDOWN_START);
     setGameState((currentState) => ({
@@ -406,31 +451,91 @@ export function App() {
   function resetGameSession(phase: "title" | "preparing" | "countdown") {
     releaseMediaResources();
     setCountdownValue(COUNTDOWN_START);
+    if (phase === "title") {
+      setRankingDisplayName("");
+      setHighlightedRankingEntryId(null);
+      setResultSubmissionStatus("idle");
+    }
     setGameState(
       phase === "title" ? createInitialGameState() : createGameState(phase),
     );
   }
 
-  function handleReplayGame() {
+  async function handleReplayGame() {
+    await confirmAudioInteraction();
+    setSubmissionId(createRankingSubmissionId());
+    setResultSubmissionStatus("idle");
     resetGameSession("preparing");
   }
 
-  function handleReturnToTitle() {
+  async function handleReturnToTitle() {
+    await confirmAudioInteraction();
     resetGameSession("title");
   }
 
+  async function handleOpenRanking() {
+    await confirmAudioInteraction();
+    setRankingOverlayOpen(true);
+  }
+
+  function handleCloseRanking() {
+    setRankingOverlayOpen(false);
+  }
+
+  function handleRankingRegistered(entry: RankingEntry) {
+    if (gamePhaseRef.current !== "result") {
+      return;
+    }
+    setHighlightedRankingEntryId(entry.id);
+  }
+
+  function handleResultSubmissionStatusChange(status: RankingSubmissionStatus) {
+    if (gamePhaseRef.current !== "result") {
+      return;
+    }
+    setResultSubmissionStatus(status);
+  }
+
+  const renderWithAudio = (screen: ReactNode) => (
+    <>
+      <AudioController
+        phase={gameState.phase}
+        countdownValue={countdownValue}
+        wallSequenceIndex={gameState.wallSequenceIndex}
+        lastJudgment={gameState.lastJudgment}
+        lastSpeedLevelUp={gameState.lastSpeedLevelUp}
+      />
+      <AudioControls phase={gameState.phase} />
+      {screen}
+      {rankingOverlayOpen && (
+        <RankingOverlay
+          highlightedEntryId={highlightedRankingEntryId}
+          onClose={handleCloseRanking}
+        />
+      )}
+    </>
+  );
+
   if (gameState.phase === "title") {
-    return (
+    return renderWithAudio(
       <main className="app-shell app-shell-title">
-        <TitleScreen onStart={handleStartGame} />
+        <TitleScreen
+          nickname={rankingDisplayName}
+          onNicknameChange={setRankingDisplayName}
+          onStart={handleStartGame}
+          onOpenRanking={handleOpenRanking}
+        />
       </main>
     );
   }
 
   if (gameState.phase === "result") {
-    const autoReturnDelayMs = getAutoReturnDelayMs(gameState.phase);
+    const autoReturnDelayMs =
+      resultSubmissionStatus === "success" && !rankingOverlayOpen
+        ? getAutoReturnDelayMs(gameState.phase)
+        : null;
 
-    return (
+    return renderWithAudio(
       <main className="app-shell">
         <ResultScreen
           finalScore={gameState.score}
@@ -439,6 +544,11 @@ export function App() {
           wallSpeedLevel={gameState.wallSpeedLevel}
           wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
           autoReturnSeconds={getAutoReturnDelaySeconds(autoReturnDelayMs)}
+          displayName={rankingDisplayName}
+          submissionId={submissionId}
+          onSubmissionStatusChange={handleResultSubmissionStatusChange}
+          onRankingRegistered={handleRankingRegistered}
+          onOpenRanking={handleOpenRanking}
           onRestart={handleReplayGame}
           onBackToTitle={handleReturnToTitle}
         />
@@ -449,7 +559,7 @@ export function App() {
   if (gameState.phase === "error") {
     const autoReturnDelayMs = getAutoReturnDelayMs(gameState.phase);
 
-    return (
+    return renderWithAudio(
       <main className="app-shell">
         <ErrorScreen
           message={getGameErrorMessage(gameState.error)}
@@ -462,7 +572,7 @@ export function App() {
   }
 
   if (gameState.phase === "preparing" && cameraStream) {
-    return (
+    return renderWithAudio(
       <main
         className="app-shell-camera-prep"
         aria-labelledby="preparing-title"
@@ -471,6 +581,10 @@ export function App() {
           <CameraPreview
             stream={cameraStream}
             onVideoElementChange={setPoseVideoElement}
+          />
+          <CameraAlignmentOverlay
+            result={displayedCalibrationResult ?? calibrationResult}
+            autoStartState={autoStartState}
           />
           <div className="camera-prep-header">
             <p className="eyebrow">Camera Setup</p>
@@ -509,7 +623,7 @@ export function App() {
   }
 
   if (gameState.phase === "countdown") {
-    return (
+    return renderWithAudio(
       <main className="app-shell app-shell-countdown" aria-labelledby="countdown-title">
         {cameraStream && (
           <CameraPreview
@@ -531,7 +645,7 @@ export function App() {
   if (gameState.phase === "playing") {
     const activeWallPattern = getWallPatternById(gameState.activeWallPatternId);
 
-    return (
+    return renderWithAudio(
       <main className="app-shell app-shell-game">
         {cameraStream && (
           <CameraPreview
@@ -562,7 +676,7 @@ export function App() {
     );
   }
 
-  return (
+  return renderWithAudio(
     <main className="app-shell" aria-labelledby="preparing-title">
       <section className="screen-panel preparing-screen" aria-live="polite">
         <p className="eyebrow">Wall Dodge Game</p>
@@ -661,4 +775,15 @@ function getAutoStartReadout(status: "inactive" | "waiting"): string {
   }
 
   return "全身が映ると自動で始まります。";
+}
+
+function createRankingSubmissionId(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = character === "x" ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
 }

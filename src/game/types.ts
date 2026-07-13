@@ -113,6 +113,11 @@ export type JudgmentResult =
       type: "miss";
       patternId: string;
       reason: "outsideSafeArea";
+      outsidePoints?: readonly {
+        anchorId: string;
+        x: number;
+        y: number;
+      }[];
     }
   | {
       type: "notDetected";

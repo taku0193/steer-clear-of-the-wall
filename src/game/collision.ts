@@ -1,5 +1,8 @@
 import type { JudgmentResult, SafeArea, WallPattern } from "./types";
-import { arePlayerAnchorsInsideSafeShape } from "./safeShape";
+import {
+  arePlayerAnchorsInsideSafeShape,
+  getPlayerAnchorsOutsideSafeShape,
+} from "./safeShape";
 
 type CollisionInput = {
   playerArea: SafeArea | null;
@@ -34,10 +37,19 @@ export function judgeCollision({
     };
   }
 
+  const outsidePoints = wallPattern.safeShape
+    ? getPlayerAnchorsOutsideSafeShape({
+        playerArea,
+        safeShape: wallPattern.safeShape,
+        tolerance: COLLISION_TOLERANCE,
+      }).map(({ id, x, y }) => ({ anchorId: id, x, y }))
+    : undefined;
+
   return {
     type: "miss",
     patternId: wallPattern.id,
     reason: "outsideSafeArea",
+    ...(outsidePoints && outsidePoints.length > 0 ? { outsidePoints } : {}),
   };
 }
 

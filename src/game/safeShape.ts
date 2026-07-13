@@ -76,6 +76,20 @@ export function arePlayerAnchorsInsideSafeShape({
   );
 }
 
+export function getPlayerAnchorsOutsideSafeShape({
+  playerArea,
+  safeShape,
+  tolerance,
+}: {
+  playerArea: SafeArea;
+  safeShape: SafeShape;
+  tolerance: number;
+}): readonly PlayerAnchorPoint[] {
+  return createPlayerAnchorPoints(playerArea).filter(
+    (point) => !isPointInsideSafeShape(point, safeShape, tolerance),
+  );
+}
+
 export function isPointInsideSafeShape(
   point: Pick<PlayerAnchorPoint, "x" | "y">,
   safeShape: SafeShape,

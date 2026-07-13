@@ -17,6 +17,7 @@ import {
 import { advanceVisualWallProgress } from "../rendering/wallMotion";
 import { GameStatusHud } from "./GameStatusHud";
 import { JudgmentOverlay } from "./JudgmentOverlay";
+import { WallPatternCue } from "./WallPatternCue";
 
 type GameScreenProps = {
   remainingHearts: number;
@@ -220,6 +221,7 @@ export function GameScreen({
         judgment={visibleJudgment}
         speedLevelUp={lastSpeedLevelUp}
       />
+      <WallPatternCue pattern={activeWallPattern} />
 
       <button
         className="secondary-action game-reset-action"

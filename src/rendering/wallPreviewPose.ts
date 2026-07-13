@@ -14,7 +14,24 @@ export function createWallPreviewAvatarPose(
   const centerX = pattern.safeArea.x + pattern.safeArea.width / 2;
   const targetPose = createNormalizedPose(pattern.id, centerX);
   const startPose = standingPose(0.5);
-  const pose = interpolatePose(startPose, targetPose, smoothStep(poseProgress));
+  const anticipationPose = createAnticipationPose(
+    pattern.id,
+    startPose,
+    targetPose,
+  );
+  const normalizedProgress = Math.min(Math.max(poseProgress, 0), 1);
+  const pose =
+    normalizedProgress < 0.28
+      ? interpolatePose(
+          startPose,
+          anticipationPose,
+          smoothStep(normalizedProgress / 0.28),
+        )
+      : interpolatePose(
+          anticipationPose,
+          targetPose,
+          smoothStep((normalizedProgress - 0.28) / 0.72),
+        );
   const projected: AvatarPose = {};
 
   for (const [name, point] of Object.entries(pose)) {
@@ -26,6 +43,41 @@ export function createWallPreviewAvatarPose(
   }
 
   return projected;
+}
+
+function createAnticipationPose(
+  patternId: string,
+  start: NormalizedPose,
+  target: NormalizedPose,
+): NormalizedPose {
+  if (patternId === "small-jump") {
+    const pose = interpolatePose(start, crouchPose(0.5, false), 0.42);
+    pose.leftWrist = p(0.39, 0.5);
+    pose.rightWrist = p(0.61, 0.5);
+    return pose;
+  }
+
+  if (
+    patternId.includes("low") ||
+    patternId === "crouch-low" ||
+    patternId.includes("side-seat") ||
+    patternId === "head-down"
+  ) {
+    return interpolatePose(start, target, 0.24);
+  }
+
+  if (
+    patternId.includes("lean") ||
+    patternId.includes("side-step") ||
+    patternId.includes("gap")
+  ) {
+    const pose = interpolatePose(start, target, 0.3);
+    pose.leftAnkle = start.leftAnkle;
+    pose.rightAnkle = start.rightAnkle;
+    return pose;
+  }
+
+  return interpolatePose(start, target, 0.2);
 }
 
 function interpolatePose(

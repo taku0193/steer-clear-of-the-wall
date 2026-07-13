@@ -1,0 +1,27 @@
+/* Countdown */
+.countdown-screen { position: relative; width: 100%; height: 100%; overflow: hidden; isolation: isolate; }
+.countdown-content {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.countdown-content h1 { font-size: 2.1rem; }
+.countdown-number {
+  width: 2ch;
+  margin: 0;
+  color: var(--score);
+  font-size: 10rem;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+  animation: countdown-pop 450ms ease-out both;
+}
+.countdown-pattern-label { margin: 4px 0 0; color: var(--safe); font-size: 0.86rem; font-weight: 900; }
+.countdown-back-action { position: absolute; z-index: 3; right: 18px; bottom: 18px; background: rgba(8, 11, 13, 0.78); }
+
+@keyframes countdown-pop { from { opacity: 0.4; transform: scale(0.72); } to { opacity: 1; transform: scale(1); } }

@@ -1,4 +1,5 @@
 import type { AvatarStyle } from "../game/types";
+import { AvatarStylePreview } from "./AvatarStylePreview";
 
 type AvatarStyleSelectorProps = {
   value: AvatarStyle;
@@ -43,6 +44,7 @@ export function AvatarStyleSelector({
             aria-pressed={value === option.value}
             onClick={() => onChange(option.value)}
           >
+            <AvatarStylePreview style={option.value} />
             <strong>{option.label}</strong>
             <span>{option.description}</span>
           </button>

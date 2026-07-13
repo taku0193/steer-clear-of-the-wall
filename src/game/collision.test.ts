@@ -159,10 +159,13 @@ describe("judgeCollision", () => {
       },
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       type: "miss",
       patternId: wallPattern.id,
       reason: "outsideSafeArea",
     });
+    if (result.type === "miss") {
+      expect(result.outsidePoints?.length).toBeGreaterThan(0);
+    }
   });
 });

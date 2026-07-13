@@ -1,0 +1,95 @@
+@media (max-width: 1199px) {
+  .title-content h1 { font-size: 4rem; }
+  .camera-prep-panel { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; max-height: 48vh; }
+  .camera-prep-header { top: 12px; left: 12px; }
+  .camera-prep-panel .calibration-checks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pose-status { top: 84px; right: auto; left: 14px; }
+}
+
+@media (max-width: 640px) {
+  .app-shell { padding: 16px; }
+  .screen-panel { gap: 18px; padding: 22px 18px; }
+  h1 { font-size: 2.15rem; }
+  .title-content { right: 20px; bottom: 28px; left: 20px; width: auto; gap: 13px; }
+  .title-content h1 { font-size: 3rem; }
+  .title-content .summary { font-size: 1rem; }
+  .title-start-action { width: 100%; min-width: 0; }
+  .title-mode-note { top: 14px; right: 14px; }
+  .camera-prep-header { max-width: 240px; padding: 8px 11px; }
+  .camera-prep-header h1 { font-size: 1.35rem; }
+  .camera-prep-panel { max-height: 52vh; gap: 8px; padding: 10px; overflow-y: auto; }
+  .camera-prep-panel .calibration-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .avatar-style-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .avatar-style-option { justify-items: center; padding: 8px 5px; text-align: center; }
+  .avatar-style-option span { display: none; }
+  .preparation-actions, .screen-actions { display: grid; grid-template-columns: 1fr; }
+  .preparation-actions button, .screen-actions button { width: 100%; }
+  .countdown-number { font-size: 7rem; }
+  .countdown-content h1 { font-size: 1.7rem; }
+  .countdown-back-action { right: 8px; bottom: 8px; min-height: 42px; }
+  .game-hud { top: max(8px, env(safe-area-inset-top)); right: 8px; left: 8px; grid-template-columns: minmax(104px, 1.45fr) repeat(3, minmax(0, 1fr)); gap: 3px; }
+  .game-hud { grid-template-columns: 1.45fr 1fr; grid-template-areas: "hearts score" "miss speed"; }
+  .hud-item { min-height: 30px; padding: 4px 7px; grid-template-columns: 1fr auto; align-items: center; }
+  .hud-item:nth-child(1) { grid-area: hearts; min-height: 56px; grid-template-columns: 1fr; }
+  .hud-item:nth-child(2) { grid-area: score; min-height: 56px; grid-template-columns: 1fr; }
+  .hud-item:nth-child(3) { grid-area: miss; }
+  .hud-item:nth-child(4) { grid-area: speed; }
+  .hud-item strong { font-size: 1.05rem; }
+  .hud-item:nth-child(-n + 2) strong { font-size: 1.35rem; }
+  .hud-item .heart-readout { font-size: 0.92rem; }
+  .pose-status { top: 98px; left: 8px; max-width: calc(100vw - 16px); padding: 7px 9px; font-size: 0.68rem; }
+  .pose-status-notDetected { top: 50%; left: 50%; padding: 12px 14px; font-size: 0.86rem; }
+  .judgment-feedback { bottom: 8px; min-width: 0; max-width: calc(100vw - 120px); padding: 8px 10px; font-size: 0.78rem; }
+  .judgment-mark { width: 21px; height: 21px; }
+  .game-reset-action { right: 8px; bottom: 8px; min-height: 38px; padding: 0 11px; font-size: 0.75rem; }
+  .wall-pattern-cue { top: 140px; max-width: 64vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .result-score-hero strong { font-size: 3.8rem; }
+  .result-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .score-readout strong { font-size: 1.85rem; }
+  .camera-person-guide { width: 46vw; }
+  .camera-distance-state { bottom: 54vh; }
+}
+
+@media (max-width: 380px) {
+  .game-hud { grid-template-columns: 1.4fr 1fr; }
+  .hud-item { padding-inline: 5px; }
+  .hud-item .heart-readout { font-size: 0.82rem; }
+  .result-stats { grid-template-columns: 1fr; }
+}
+
+@media (max-height: 560px) {
+  .app-shell { padding: 10px; }
+  .preparing-screen { width: min(940px, 100%); grid-template-columns: minmax(220px, 0.7fr) minmax(460px, 1.3fr); gap: 7px 18px; padding: 14px 18px; }
+  .preparing-screen > .eyebrow,
+  .preparing-screen > h1,
+  .preparing-screen > .summary,
+  .preparing-screen > .state-readout { grid-column: 1; }
+  .preparing-screen > h1 { font-size: 1.8rem; }
+  .preparing-screen > .summary { font-size: 0.78rem; line-height: 1.4; }
+  .preparing-screen > .avatar-style-selector { grid-column: 2; grid-row: 1 / span 4; }
+  .preparing-screen .avatar-style-preview { max-height: 150px; }
+  .preparing-screen > .preparation-actions { grid-column: 1 / -1; }
+  .title-content { bottom: 18px; gap: 8px; }
+  .title-content h1 { font-size: 2.7rem; }
+  .title-content .summary, .title-mode-note { display: none; }
+  .title-nickname-form { gap: 4px; }
+  .title-nickname-row input, .title-nickname-row .title-start-action { min-height: 42px; }
+  .title-nickname-note { font-size: 0.6rem; }
+  .camera-prep-header { display: none; }
+  .camera-prep-panel { top: auto; right: 8px; bottom: 8px; left: 8px; display: grid; max-height: calc(100dvh - 16px); grid-template-columns: minmax(170px, 0.8fr) minmax(260px, 1.2fr) auto; align-items: end; overflow: auto; }
+  .camera-prep-panel .avatar-style-options { grid-template-columns: 1fr; }
+  .camera-prep-panel .auto-start-readout { align-self: stretch; }
+  .camera-prep-panel .exhibition-reset-action { width: auto; min-width: 120px; }
+  .countdown-number { font-size: 6rem; }
+  .game-hud { top: 6px; }
+  .hud-item { min-height: 50px; }
+  .pose-status { top: 64px; }
+  .screen-panel { gap: 12px; padding-block: 16px; }
+  .result-score-hero { padding-bottom: 10px; }
+  .result-score-hero strong { font-size: 3rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .primary-action:hover { transform: none; }
+}

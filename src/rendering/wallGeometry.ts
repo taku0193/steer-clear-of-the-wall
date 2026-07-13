@@ -34,6 +34,23 @@ export function calculateWallRect(
   };
 }
 
+export function applyWallPass(
+  rect: WallRect,
+  passProgress: number,
+): WallRect {
+  const progress = clampProgress(passProgress);
+  const scale = 1 + progress * 0.72;
+  const width = rect.width * scale;
+  const height = rect.height * scale;
+
+  return {
+    x: rect.x + (rect.width - width) / 2,
+    y: rect.y + (rect.height - height) / 2,
+    width,
+    height,
+  };
+}
+
 function clampProgress(progress: number): number {
   if (!Number.isFinite(progress)) {
     return 0;
