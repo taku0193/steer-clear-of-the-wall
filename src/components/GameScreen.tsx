@@ -15,6 +15,7 @@ import {
   type CanvasViewport,
 } from "../rendering/canvasViewport";
 import { advanceVisualWallProgress } from "../rendering/wallMotion";
+import { getWallProgressStep } from "../game/wallSpeed";
 import { GameStatusHud } from "./GameStatusHud";
 import { JudgmentOverlay } from "./JudgmentOverlay";
 import { WallPatternCue } from "./WallPatternCue";
@@ -97,6 +98,7 @@ export function GameScreen({
           previousLogicalProgress,
           logicalProgress,
           elapsedMs,
+          progressStep: getWallProgressStep(wallSpeedLevel),
         }),
       );
       previousLogicalWallProgressRef.current = logicalProgress;
@@ -107,7 +109,7 @@ export function GameScreen({
     animationFrameId = window.requestAnimationFrame(animateWall);
 
     return () => window.cancelAnimationFrame(animationFrameId);
-  }, []);
+  }, [wallSpeedLevel]);
 
   useEffect(() => {
     const screenElement = screenRef.current;
@@ -221,7 +223,12 @@ export function GameScreen({
         judgment={visibleJudgment}
         speedLevelUp={lastSpeedLevelUp}
       />
-      <WallPatternCue pattern={activeWallPattern} />
+      <WallPatternCue
+        pattern={activeWallPattern}
+        wallProgress={wallProgress}
+        visualWallProgress={visualWallProgress}
+        wallSpeedLevel={wallSpeedLevel}
+      />
 
       <button
         className="secondary-action game-reset-action"

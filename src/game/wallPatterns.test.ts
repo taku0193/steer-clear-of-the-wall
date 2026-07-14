@@ -92,6 +92,14 @@ describe("WALL_PATTERNS", () => {
     }
   });
 
+  it("ジャンプだけ瞬間動作用のタイミング案内を持つ", () => {
+    for (const pattern of WALL_PATTERNS) {
+      expect(pattern.actionTiming).toBe(
+        pattern.id === "small-jump" ? "jump" : "hold",
+      );
+    }
+  });
+
   it("ID検索とインデックス検索がフォールバック・循環する", () => {
     expect(getWallPatternById("right-gap").id).toBe("right-gap");
     expect(getWallPatternById("unknown").id).toBe(WALL_PATTERNS[0].id);

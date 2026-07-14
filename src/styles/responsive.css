@@ -6,6 +6,11 @@
   .pose-status { top: 84px; right: auto; left: 14px; }
 }
 
+@media (min-width: 641px) and (max-width: 1323px) {
+  .wall-pattern-cue { top: auto; bottom: 78px; }
+  .jump-now-signal { display: none; }
+}
+
 @media (max-width: 640px) {
   .app-shell { padding: 16px; }
   .screen-panel { gap: 18px; padding: 22px 18px; }
@@ -42,7 +47,12 @@
   .judgment-feedback { bottom: 8px; min-width: 0; max-width: calc(100vw - 120px); padding: 8px 10px; font-size: 0.78rem; }
   .judgment-mark { width: 21px; height: 21px; }
   .game-reset-action { right: 8px; bottom: 8px; min-height: 38px; padding: 0 11px; font-size: 0.75rem; }
-  .wall-pattern-cue { top: 140px; max-width: 64vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wall-pattern-cue { top: 140px; bottom: auto; width: calc(100vw - 16px); padding: 8px 10px 7px; }
+  .wall-pattern-cue-copy { min-height: 38px; gap: 7px; }
+  .wall-pattern-cue-icon { width: 34px; height: 34px; flex-basis: 34px; font-size: 1.5rem; }
+  .wall-pattern-cue-text strong { font-size: 0.98rem; }
+  .wall-pattern-cue-text small { font-size: 0.65rem; }
+  .jump-now-signal { display: block; bottom: 110px; }
   .result-score-hero strong { font-size: 3.8rem; }
   .result-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .score-readout strong { font-size: 1.85rem; }
@@ -84,12 +94,22 @@
   .game-hud { top: 6px; }
   .hud-item { min-height: 50px; }
   .pose-status { top: 64px; }
+  .wall-pattern-cue { top: auto; bottom: 78px; width: min(390px, calc(100vw - 300px)); padding-block: 6px; }
+  .wall-pattern-cue-copy { min-height: 34px; }
+  .wall-cue-steps { display: none; }
+  .jump-now-signal { bottom: 160px; }
   .screen-panel { gap: 12px; padding-block: 16px; }
   .result-score-hero { padding-bottom: 10px; }
   .result-score-hero strong { font-size: 3rem; }
 }
 
+@media (max-height: 560px) and (max-width: 640px) {
+  .wall-pattern-cue { top: 140px; bottom: auto; width: calc(100vw - 16px); }
+  .jump-now-signal { display: block; bottom: 110px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .primary-action:hover { transform: none; }
+  .wall-pattern-cue, .jump-now-signal { animation: none; }
 }

@@ -54,6 +54,7 @@ function createPattern(
     id,
     name,
     verticalAnchor: "top",
+    actionTiming: pose === "jump" ? "jump" : "hold",
     safeArea: getBounds(points),
     safeShape: {
       zones: [{ type: "polygon", id: `${id}-silhouette`, points }],
