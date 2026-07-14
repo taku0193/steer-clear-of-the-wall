@@ -78,6 +78,7 @@ export type SafeShape = {
 };
 
 export type WallVerticalAnchor = "top" | "ground" | "center";
+export type WallActionTiming = "hold" | "jump";
 
 export type WallPattern = {
   id: string;
@@ -85,6 +86,7 @@ export type WallPattern = {
   safeArea: SafeArea;
   safeShape?: SafeShape;
   verticalAnchor: WallVerticalAnchor;
+  actionTiming?: WallActionTiming;
   scoreValue: number;
 };
 

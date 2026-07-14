@@ -8,6 +8,7 @@ import {
 
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900 },
+  { name: "compact", width: 1280, height: 800 },
   { name: "mobile", width: 390, height: 844 },
   { name: "low", width: 960, height: 540 },
 ] as const;
@@ -33,11 +34,22 @@ for (const viewport of VIEWPORTS) {
     await expect(gameCanvas).toBeVisible({ timeout: 7_000 });
     await expectCanvasHasVisualContent(gameCanvas);
     const hud = page.getByLabel("プレイ状況");
+    const cue = page.getByLabel("次の動きと壁のタイミング");
+    const poseStatus = page.locator(".pose-status");
+    const judgment = page.locator(".judgment-feedback");
     const exit = page.getByRole("button", { name: "プレイを終了してタイトルへ戻る" });
     await expect(hud).toContainText("♥♥♥♥♥");
+    await expect(cue).toBeVisible();
     await expectInsideViewport(hud, page);
+    await expectInsideViewport(cue, page);
+    await expectInsideViewport(poseStatus, page);
+    await expectInsideViewport(judgment, page);
     await expectInsideViewport(exit, page);
     await expectNoIntersection(hud, exit);
+    await expectNoIntersection(hud, cue);
+    await expectNoIntersection(poseStatus, cue);
+    await expectNoIntersection(cue, judgment);
+    await expectNoIntersection(cue, exit);
     await capturePage(page, testInfo, `${viewport.name}-playing`);
 
     if (viewport.name === "desktop") {

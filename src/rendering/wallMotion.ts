@@ -1,6 +1,6 @@
 import {
-  WALL_CYCLE_DURATION_MS,
   WALL_PROGRESS_STEP,
+  WALL_TICK_INTERVAL_MS,
 } from "../game/gameLoop";
 
 type WallMotionInput = {
@@ -8,6 +8,7 @@ type WallMotionInput = {
   previousLogicalProgress: number;
   logicalProgress: number;
   elapsedMs: number;
+  progressStep: number;
 };
 
 export function advanceVisualWallProgress({
@@ -15,6 +16,7 @@ export function advanceVisualWallProgress({
   previousLogicalProgress,
   logicalProgress,
   elapsedMs,
+  progressStep,
 }: WallMotionInput): number {
   const normalizedLogicalProgress = clampProgress(logicalProgress);
 
@@ -28,12 +30,22 @@ export function advanceVisualWallProgress({
   );
   const validElapsedMs =
     Number.isFinite(elapsedMs) && elapsedMs > 0 ? elapsedMs : 0;
+  const validProgressStep =
+    Number.isFinite(progressStep) && progressStep > 0
+      ? progressStep
+      : WALL_PROGRESS_STEP;
+  const nextLogicalBoundary = clampProgress(
+    normalizedLogicalProgress + validProgressStep,
+  );
+  const intervalProgress =
+    nextLogicalBoundary - normalizedLogicalProgress;
 
   return Math.min(
     clampProgress(
-      baseProgress + validElapsedMs / WALL_CYCLE_DURATION_MS,
+      baseProgress +
+        (validElapsedMs * intervalProgress) / WALL_TICK_INTERVAL_MS,
     ),
-    clampProgress(normalizedLogicalProgress + WALL_PROGRESS_STEP),
+    nextLogicalBoundary,
   );
 }
 
