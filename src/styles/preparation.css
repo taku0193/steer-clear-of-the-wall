@@ -196,3 +196,21 @@
 .preparation-actions, .screen-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .camera-prep-panel .avatar-style-option span, .camera-prep-panel .calibration-check span:last-child { display: none; }
 .camera-prep-panel .exhibition-reset-action { width: 100%; }
+
+@media (min-width: 641px) {
+  .preparing-screen {
+    grid-template-columns: minmax(260px, 0.72fr) minmax(430px, 1.28fr);
+    gap: 12px 22px;
+  }
+  .preparing-screen > .eyebrow,
+  .preparing-screen > h1,
+  .preparing-screen > .summary,
+  .preparing-screen > .state-readout,
+  .preparing-screen > .heart-rate-connection { grid-column: 1; }
+  .preparing-screen > .avatar-style-selector {
+    grid-column: 2;
+    grid-row: 1 / span 5;
+  }
+  .preparing-screen > .preparation-actions { grid-column: 1 / -1; }
+  .preparing-screen .avatar-style-preview { max-height: 250px; }
+}

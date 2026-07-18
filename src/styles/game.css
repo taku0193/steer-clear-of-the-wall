@@ -8,6 +8,7 @@
   left: max(14px, env(safe-area-inset-left));
   display: grid;
   grid-template-columns: 142px repeat(3, 92px);
+  grid-template-areas: "hearts score miss speed" "heart heart . .";
   gap: 5px;
   pointer-events: none;
 }
@@ -25,8 +26,18 @@
 .hud-item span { color: var(--text-secondary); font-size: 0.66rem; font-weight: 800; }
 .hud-item strong { overflow: hidden; color: var(--text-primary); font-size: 1.55rem; font-variant-numeric: tabular-nums; line-height: 1; text-overflow: ellipsis; }
 .hud-item-hearts { border-color: var(--danger); }
+.hud-item:nth-child(1) { grid-area: hearts; }
+.hud-item:nth-child(2) { grid-area: score; }
+.hud-item:nth-child(3) { grid-area: miss; }
+.hud-item:nth-child(4) { grid-area: speed; }
 .hud-item .heart-readout { overflow: visible; color: var(--danger); font-size: 1.16rem; text-overflow: clip; white-space: nowrap; }
 .hud-item .speed-readout { color: var(--score); }
+.hud-item-heart-rate { grid-area: heart; min-height: 42px; grid-template-columns: auto 1fr auto; align-items: center; border-color: var(--danger); }
+.hud-item .heart-rate-readout { display: flex; align-items: baseline; gap: 3px; color: var(--text-primary); font-size: 1.25rem; white-space: nowrap; }
+.hud-item .heart-rate-readout > span { color: var(--danger); font-size: 0.9rem; }
+.hud-item .heart-rate-readout small { color: var(--text-secondary); font-size: 0.55rem; }
+.hud-item .heart-rate-hud-status { color: var(--safe); font-size: 0.55rem; letter-spacing: 0.06em; }
+.heart-rate-game-reconnect { position: absolute; z-index: 3; top: 76px; right: max(14px, env(safe-area-inset-right)); min-height: 36px; padding: 0 12px; background: rgba(8, 11, 13, 0.86); font-size: 0.72rem; }
 
 .pose-status {
   position: absolute;

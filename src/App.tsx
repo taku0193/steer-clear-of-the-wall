@@ -15,6 +15,7 @@ import { ErrorScreen } from "./components/ErrorScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { TitleScreen } from "./components/TitleScreen";
+import { HeartRateConnectionPanel } from "./components/HeartRateConnectionPanel";
 import { RankingOverlay } from "./components/ranking/RankingOverlay";
 import type { RankingSubmissionStatus } from "./components/ranking/ResultSubmissionStatus";
 import {
@@ -50,6 +51,7 @@ import type {
   PoseFrame,
 } from "./pose/poseTypes";
 import type { RankingEntry } from "./ranking/rankingTypes";
+import { useHeartRateMonitor } from "./heart-rate/useHeartRateMonitor";
 
 const COUNTDOWN_START = 3;
 const CALIBRATION_READY_HOLD_MS = 600;
@@ -64,6 +66,7 @@ export function App() {
 
 function GameApp() {
   const audio = useGameAudio();
+  const heartRate = useHeartRateMonitor();
   const [gameState, setGameState] = useState(createInitialGameState);
   const [countdownValue, setCountdownValue] = useState(COUNTDOWN_START);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -89,6 +92,7 @@ function GameApp() {
   const poseDetectorRef = useRef<PoseDetectorAdapter | null>(null);
   const calibrationReadyHoldStartedAtRef = useRef<number | null>(null);
   const gamePhaseRef = useRef(gameState.phase);
+  const heartRateResultFinalizedRef = useRef(false);
   gamePhaseRef.current = gameState.phase;
 
   const releaseMediaResources = useCallback((updateState = true) => {
@@ -125,6 +129,31 @@ function GameApp() {
       releaseMediaResources();
     }
   }, [gameState.phase, releaseMediaResources]);
+
+  useEffect(() => {
+    if (gameState.phase === "result" && !heartRateResultFinalizedRef.current) {
+      heartRateResultFinalizedRef.current = true;
+      heartRate.finishSession();
+      void heartRate.disconnect();
+      return;
+    }
+
+    if (gameState.phase === "error") {
+      heartRateResultFinalizedRef.current = false;
+      heartRate.resetSession();
+      void heartRate.disconnect();
+      return;
+    }
+
+    if (gameState.phase !== "result") {
+      heartRateResultFinalizedRef.current = false;
+    }
+  }, [
+    gameState.phase,
+    heartRate.disconnect,
+    heartRate.finishSession,
+    heartRate.resetSession,
+  ]);
 
   useEffect(() => {
     if (
@@ -286,6 +315,7 @@ function GameApp() {
   );
 
   const startCountdownFromPreparation = useCallback(() => {
+    heartRate.startSession();
     setCountdownValue(COUNTDOWN_START);
     setGameState((currentState) => {
       if (currentState.phase !== "preparing") {
@@ -297,7 +327,7 @@ function GameApp() {
         phase: "countdown",
       };
     });
-  }, []);
+  }, [heartRate.startSession]);
 
   useEffect(() => {
     if (gameState.phase !== "preparing" || !cameraStream) {
@@ -434,6 +464,7 @@ function GameApp() {
   async function handleUseMockPose() {
     await confirmAudioInteraction();
     releaseMediaResources();
+    heartRate.startSession();
     setCountdownValue(COUNTDOWN_START);
     setGameState((currentState) => ({
       ...createGameState("countdown"),
@@ -450,6 +481,11 @@ function GameApp() {
 
   function resetGameSession(phase: "title" | "preparing" | "countdown") {
     releaseMediaResources();
+    if (phase === "title") {
+      void heartRate.disposeForTitle();
+    } else {
+      heartRate.resetSession();
+    }
     setCountdownValue(COUNTDOWN_START);
     if (phase === "title") {
       setRankingDisplayName("");
@@ -546,6 +582,7 @@ function GameApp() {
           autoReturnSeconds={getAutoReturnDelaySeconds(autoReturnDelayMs)}
           displayName={rankingDisplayName}
           submissionId={submissionId}
+          heartRateResult={heartRate.result}
           onSubmissionStatusChange={handleResultSubmissionStatusChange}
           onRankingRegistered={handleRankingRegistered}
           onOpenRanking={handleOpenRanking}
@@ -598,6 +635,14 @@ function GameApp() {
             <p className="state-readout">
               {getPosePreparationLabel(gameState.poseDetectionStatus)}
             </p>
+            <HeartRateConnectionPanel
+              compact
+              status={heartRate.connectionStatus}
+              freshness={heartRate.freshness}
+              currentBpm={heartRate.currentBpm}
+              errorMessage={heartRate.errorMessage}
+              onConnect={heartRate.connect}
+            />
             {displayedCalibrationResult && (
               <CalibrationPanel
                 result={displayedCalibrationResult}
@@ -670,6 +715,10 @@ function GameApp() {
           wallSpeedLevel={gameState.wallSpeedLevel}
           wallSpeedLabel={getWallSpeedLabel(gameState.wallSpeedLevel)}
           lastSpeedLevelUp={gameState.lastSpeedLevelUp}
+          heartRateBpm={heartRate.currentBpm}
+          heartRateFreshness={heartRate.freshness}
+          heartRateConnectionStatus={heartRate.connectionStatus}
+          onReconnectHeartRate={heartRate.connect}
           onResetToTitle={handleReturnToTitle}
         />
       </main>
@@ -691,6 +740,13 @@ function GameApp() {
         <p className="state-readout">
           {isCameraStarting ? "カメラの許可を待っています" : "カメラは未接続です"}
         </p>
+        <HeartRateConnectionPanel
+          status={heartRate.connectionStatus}
+          freshness={heartRate.freshness}
+          currentBpm={heartRate.currentBpm}
+          errorMessage={heartRate.errorMessage}
+          onConnect={heartRate.connect}
+        />
         <div className="preparation-actions">
           <button
             className="primary-action"

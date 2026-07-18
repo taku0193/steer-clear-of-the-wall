@@ -19,6 +19,10 @@ import { getWallProgressStep } from "../game/wallSpeed";
 import { GameStatusHud } from "./GameStatusHud";
 import { JudgmentOverlay } from "./JudgmentOverlay";
 import { WallPatternCue } from "./WallPatternCue";
+import type {
+  HeartRateConnectionStatus,
+  HeartRateFreshness,
+} from "../heart-rate/heartRateTypes";
 
 type GameScreenProps = {
   remainingHearts: number;
@@ -36,6 +40,10 @@ type GameScreenProps = {
   wallSpeedLevel: number;
   wallSpeedLabel: string;
   lastSpeedLevelUp: boolean;
+  heartRateBpm: number | null;
+  heartRateFreshness: HeartRateFreshness;
+  heartRateConnectionStatus: HeartRateConnectionStatus;
+  onReconnectHeartRate: () => Promise<void>;
   onResetToTitle: () => void;
 };
 
@@ -55,6 +63,10 @@ export function GameScreen({
   wallSpeedLevel,
   wallSpeedLabel,
   lastSpeedLevelUp,
+  heartRateBpm,
+  heartRateFreshness,
+  heartRateConnectionStatus,
+  onReconnectHeartRate,
   onResetToTitle,
 }: GameScreenProps) {
   const screenRef = useRef<HTMLElement | null>(null);
@@ -210,7 +222,21 @@ export function GameScreen({
         misses={misses}
         wallSpeedLevel={wallSpeedLevel}
         wallSpeedLabel={wallSpeedLabel}
+        heartRateBpm={heartRateBpm}
+        heartRateFreshness={heartRateFreshness}
+        heartRateConnectionStatus={heartRateConnectionStatus}
       />
+
+      {(heartRateConnectionStatus === "disconnected" ||
+        heartRateConnectionStatus === "error") && (
+        <button
+          className="secondary-action heart-rate-game-reconnect"
+          type="button"
+          onClick={() => void onReconnectHeartRate().catch(() => undefined)}
+        >
+          心拍を再接続
+        </button>
+      )}
 
       <p
         className={`pose-status pose-status-${poseDetectionStatus}`}

@@ -32,22 +32,22 @@
   .countdown-number { font-size: 7rem; }
   .countdown-content h1 { font-size: 1.7rem; }
   .countdown-back-action { right: 8px; bottom: 8px; min-height: 42px; }
-  .game-hud { top: max(8px, env(safe-area-inset-top)); right: 8px; left: 8px; grid-template-columns: minmax(104px, 1.45fr) repeat(3, minmax(0, 1fr)); gap: 3px; }
-  .game-hud { grid-template-columns: 1.45fr 1fr; grid-template-areas: "hearts score" "miss speed"; }
+  .game-hud { top: max(8px, env(safe-area-inset-top)); right: 8px; left: 8px; grid-template-columns: 1.45fr 1fr; grid-template-areas: "hearts score" "miss speed" "heart heart"; gap: 3px; }
   .hud-item { min-height: 30px; padding: 4px 7px; grid-template-columns: 1fr auto; align-items: center; }
   .hud-item:nth-child(1) { grid-area: hearts; min-height: 56px; grid-template-columns: 1fr; }
   .hud-item:nth-child(2) { grid-area: score; min-height: 56px; grid-template-columns: 1fr; }
   .hud-item:nth-child(3) { grid-area: miss; }
   .hud-item:nth-child(4) { grid-area: speed; }
+  .hud-item:nth-child(5) { grid-area: heart; min-height: 38px; grid-template-columns: auto 1fr auto; }
   .hud-item strong { font-size: 1.05rem; }
   .hud-item:nth-child(-n + 2) strong { font-size: 1.35rem; }
   .hud-item .heart-readout { font-size: 0.92rem; }
-  .pose-status { top: 98px; left: 8px; max-width: calc(100vw - 16px); padding: 7px 9px; font-size: 0.68rem; }
+  .pose-status { top: 140px; left: 8px; max-width: calc(100vw - 16px); padding: 7px 9px; font-size: 0.68rem; }
   .pose-status-notDetected { top: 50%; left: 50%; padding: 12px 14px; font-size: 0.86rem; }
   .judgment-feedback { bottom: 8px; min-width: 0; max-width: calc(100vw - 120px); padding: 8px 10px; font-size: 0.78rem; }
   .judgment-mark { width: 21px; height: 21px; }
   .game-reset-action { right: 8px; bottom: 8px; min-height: 38px; padding: 0 11px; font-size: 0.75rem; }
-  .wall-pattern-cue { top: 140px; bottom: auto; width: calc(100vw - 16px); padding: 8px 10px 7px; }
+  .wall-pattern-cue { top: 180px; bottom: auto; width: calc(100vw - 16px); padding: 8px 10px 7px; }
   .wall-pattern-cue-copy { min-height: 38px; gap: 7px; }
   .wall-pattern-cue-icon { width: 34px; height: 34px; flex-basis: 34px; font-size: 1.5rem; }
   .wall-pattern-cue-text strong { font-size: 0.98rem; }
@@ -55,6 +55,13 @@
   .jump-now-signal { display: block; bottom: 110px; }
   .result-score-hero strong { font-size: 3.8rem; }
   .result-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .heart-rate-statistics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .heart-rate-statistics p { display: grid; gap: 2px; }
+  .heart-rate-statistics strong { font-size: 1.45rem; }
+  .heart-rate-connection { grid-template-columns: 1fr; }
+  .heart-rate-current { grid-column: 1; grid-row: auto; justify-content: start; }
+  .heart-rate-help, .heart-rate-error { grid-column: 1; }
+  .heart-rate-game-reconnect { top: 142px; right: 8px; }
   .score-readout strong { font-size: 1.85rem; }
   .camera-person-guide { width: 46vw; }
   .camera-distance-state { bottom: 54vh; }
@@ -65,6 +72,7 @@
   .hud-item { padding-inline: 5px; }
   .hud-item .heart-readout { font-size: 0.82rem; }
   .result-stats { grid-template-columns: 1fr; }
+  .heart-rate-statistics { grid-template-columns: 1fr; }
 }
 
 @media (max-height: 560px) {
@@ -104,7 +112,7 @@
 }
 
 @media (max-height: 560px) and (max-width: 640px) {
-  .wall-pattern-cue { top: 140px; bottom: auto; width: calc(100vw - 16px); }
+  .wall-pattern-cue { top: 180px; bottom: auto; width: calc(100vw - 16px); }
   .jump-now-signal { display: block; bottom: 110px; }
 }
 

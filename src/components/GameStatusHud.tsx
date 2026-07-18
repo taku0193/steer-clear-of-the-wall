@@ -1,4 +1,8 @@
 import type { ReactNode } from "react";
+import type {
+  HeartRateConnectionStatus,
+  HeartRateFreshness,
+} from "../heart-rate/heartRateTypes";
 
 type GameStatusHudProps = {
   remainingHearts: number;
@@ -6,6 +10,9 @@ type GameStatusHudProps = {
   misses: number;
   wallSpeedLevel: number;
   wallSpeedLabel: string;
+  heartRateBpm: number | null;
+  heartRateFreshness: HeartRateFreshness;
+  heartRateConnectionStatus: HeartRateConnectionStatus;
 };
 
 export function GameStatusHud({
@@ -14,6 +21,9 @@ export function GameStatusHud({
   misses,
   wallSpeedLevel,
   wallSpeedLabel,
+  heartRateBpm,
+  heartRateFreshness,
+  heartRateConnectionStatus,
 }: GameStatusHudProps) {
   return (
     <header className="game-hud" aria-label="プレイ状況">
@@ -39,8 +49,44 @@ export function GameStatusHud({
           Lv.{wallSpeedLevel}
         </strong>
       </HudItem>
+      <HudItem label="心拍" className="hud-item-heart-rate">
+        <strong
+          className="heart-rate-readout"
+          aria-label={getHeartRateLabel(
+            heartRateBpm,
+            heartRateFreshness,
+            heartRateConnectionStatus,
+          )}
+        >
+          <span aria-hidden="true">♥</span> {heartRateBpm ?? "--"}
+          <small>BPM</small>
+        </strong>
+        <span className="heart-rate-hud-status">
+          {getHeartRateStatus(heartRateFreshness, heartRateConnectionStatus)}
+        </span>
+      </HudItem>
     </header>
   );
+}
+
+function getHeartRateStatus(
+  freshness: HeartRateFreshness,
+  connectionStatus: HeartRateConnectionStatus,
+): string {
+  if (freshness === "live") return "LIVE";
+  if (connectionStatus === "disconnected" || freshness === "stale") return "切断";
+  if (connectionStatus === "unsupported") return "非対応";
+  return "受信待ち";
+}
+
+function getHeartRateLabel(
+  bpm: number | null,
+  freshness: HeartRateFreshness,
+  connectionStatus: HeartRateConnectionStatus,
+): string {
+  return bpm === null
+    ? `心拍数、${getHeartRateStatus(freshness, connectionStatus)}`
+    : `心拍数、${bpm} BPM、ライブ`;
 }
 
 function HudItem({

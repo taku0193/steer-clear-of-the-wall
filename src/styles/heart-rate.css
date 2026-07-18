@@ -1,0 +1,44 @@
+/* Fitbit Air heart rate */
+.heart-rate-connection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 16px;
+  border: 1px solid var(--neutral-line);
+  border-left: 3px solid var(--danger);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(8, 11, 13, 0.46);
+}
+.heart-rate-connection-heading { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.heart-rate-connection-heading > span:first-child { color: var(--danger); }
+.heart-rate-connection-heading strong { color: var(--text-primary); font-size: 0.9rem; }
+.heart-rate-status { margin-left: auto; border: 1px solid var(--neutral-line); border-radius: 999px; padding: 3px 7px; color: var(--text-secondary); font-size: 0.62rem; font-weight: 900; }
+.heart-rate-status-connected { border-color: var(--safe); color: var(--safe); }
+.heart-rate-status-error, .heart-rate-status-disconnected { border-color: var(--danger); color: var(--danger); }
+.heart-rate-current { display: flex; grid-column: 2; grid-row: 1 / span 2; align-items: baseline; justify-content: end; gap: 5px; margin: 0; font-variant-numeric: tabular-nums; }
+.heart-rate-current strong { color: var(--text-primary); font-size: 2rem; line-height: 1; }
+.heart-rate-current span { color: var(--text-secondary); font-size: 0.62rem; font-weight: 900; }
+.heart-rate-help, .heart-rate-error { grid-column: 1; margin: 0; color: var(--text-secondary); font-size: 0.72rem; line-height: 1.45; }
+.heart-rate-error { color: var(--danger); }
+.heart-rate-connect-action { grid-column: 1 / -1; justify-self: start; min-height: 40px; padding-inline: 14px; font-size: 0.78rem; }
+.heart-rate-connection-compact { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 9px 10px; }
+.heart-rate-connection-compact .heart-rate-current { grid-row: 1; }
+.heart-rate-connection-compact .heart-rate-current strong { font-size: 1.35rem; }
+.heart-rate-connection-compact .heart-rate-connect-action { min-height: 34px; }
+
+.heart-rate-result { display: grid; gap: 14px; border-top: 1px solid var(--neutral-line); border-bottom: 1px solid var(--neutral-line); padding: 18px 0; }
+.heart-rate-result-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.heart-rate-result h2 { margin: 0; color: var(--text-primary); font-size: 1.2rem; }
+.heart-rate-result-heading > span { color: var(--text-secondary); font-variant-numeric: tabular-nums; font-weight: 800; }
+.heart-rate-statistics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.heart-rate-statistics p { display: flex; min-width: 0; align-items: baseline; gap: 5px; border-left: 2px solid var(--danger); padding-left: 10px; margin: 0; }
+.heart-rate-statistics span, .heart-rate-statistics small { color: var(--text-secondary); font-size: 0.66rem; font-weight: 800; }
+.heart-rate-statistics strong { color: var(--text-primary); font-size: 1.8rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.heart-rate-chart { display: block; width: 100%; height: auto; max-height: 220px; border: 1px solid var(--neutral-line); border-radius: 6px; background: var(--surface-1); }
+.heart-rate-chart text { fill: var(--text-secondary); font-size: 11px; font-weight: 700; }
+.heart-rate-chart-axis { stroke: var(--neutral-line); stroke-width: 1; }
+.heart-rate-chart-line { fill: none; stroke: var(--danger); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+.heart-rate-chart-point { fill: var(--danger); }
+.heart-rate-gap-note, .heart-rate-medical-note, .heart-rate-empty { margin: 0; color: var(--text-secondary); font-size: 0.72rem; line-height: 1.45; }
+.heart-rate-gap-note { color: var(--score); }

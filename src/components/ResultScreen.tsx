@@ -6,6 +6,8 @@ import {
   ResultSubmissionStatus,
   type RankingSubmissionStatus,
 } from "./ranking/ResultSubmissionStatus";
+import type { HeartRateSessionResult } from "../heart-rate/heartRateTypes";
+import { HeartRateResultPanel } from "./HeartRateResultPanel";
 
 type ResultScreenProps = {
   finalScore: number;
@@ -16,6 +18,7 @@ type ResultScreenProps = {
   autoReturnSeconds: number | null;
   displayName: string;
   submissionId: string;
+  heartRateResult: HeartRateSessionResult | null;
   onSubmissionStatusChange: (status: RankingSubmissionStatus) => void;
   onRankingRegistered: (entry: RankingEntry) => void;
   onOpenRanking: () => void;
@@ -32,6 +35,7 @@ export function ResultScreen({
   autoReturnSeconds,
   displayName,
   submissionId,
+  heartRateResult,
   onSubmissionStatusChange,
   onRankingRegistered,
   onOpenRanking,
@@ -74,6 +78,7 @@ export function ResultScreen({
           </p>
         </div>
       </div>
+      <HeartRateResultPanel result={heartRateResult} />
       <ResultSubmissionStatus
         displayName={displayName}
         submissionId={submissionId}

@@ -1,0 +1,22 @@
+{
+  "feature_name": "fitbit-air-heart-rate",
+  "created_at": "2026-07-18T15:52:02+09:00",
+  "updated_at": "2026-07-18T16:25:32+09:00",
+  "language": "ja",
+  "phase": "implementation-complete-device-validation-pending",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}
