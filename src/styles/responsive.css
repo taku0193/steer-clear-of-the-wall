@@ -1,5 +1,4 @@
 @media (max-width: 1199px) {
-  .title-content h1 { font-size: 4rem; }
   .camera-prep-panel { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; max-height: 48vh; }
   .camera-prep-header { top: 12px; left: 12px; }
   .camera-prep-panel .calibration-checks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -16,7 +15,6 @@
   .screen-panel { gap: 18px; padding: 22px 18px; }
   h1 { font-size: 2.15rem; }
   .title-content { right: 20px; bottom: 28px; left: 20px; width: auto; gap: 13px; }
-  .title-content h1 { font-size: 3rem; }
   .title-content .summary { font-size: 1rem; }
   .title-start-action { width: 100%; min-width: 0; }
   .title-mode-note { top: 14px; right: 14px; }
@@ -88,7 +86,7 @@
   .preparing-screen .avatar-style-preview { max-height: 150px; }
   .preparing-screen > .preparation-actions { grid-column: 1 / -1; }
   .title-content { bottom: 18px; gap: 8px; }
-  .title-content h1 { font-size: 2.7rem; }
+  .title-content h1 { font-size: min(2.7rem, 7vw); }
   .title-content .summary, .title-mode-note { display: none; }
   .title-nickname-form { gap: 4px; }
   .title-nickname-row input, .title-nickname-row .title-start-action { min-height: 42px; }

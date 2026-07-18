@@ -20,7 +20,7 @@ export function TitleScreen({
       <div className="title-shade" />
       <div className="title-content">
         <p className="eyebrow">Full Body Arcade</p>
-        <h1 id="app-title">Steer Clear<br />of the Wall</h1>
+        <h1 id="app-title">体がコントローラー！<br />ウォール回避ゲーム</h1>
         <p className="summary">迫る壁を、全身でかわそう。</p>
         <NicknameInput
           value={nickname}

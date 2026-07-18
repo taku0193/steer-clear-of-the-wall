@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "steer-clear-of-the-wall",
+  title: "体がコントローラー！ウォール回避ゲーム",
   description: "体を動かして迫る壁の穴を避けるブラウザゲーム",
 };
 
